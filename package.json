@@ -1,39 +1,25 @@
 {
-  "name": "news-newsletter",
+  "name": "morning-brief",
   "version": "1.0.0",
-  "description": "An automated newsletter system that fetches, summarizes, and sends news articles to subscribers",
-  "main": "dist/app.js",
+  "description": "A newsletter system that fetches, summarizes, and sends news articles to subscribers",
+  "main": "dist/newsletter.js",
   "type": "module",
   "engines": {
     "node": ">=18.0.0"
   },
   "scripts": {
-    "dev": "tsx watch src/app.ts",
-    "start": "tsx src/app.ts",
-    "start:prod": "node dist/app.js",
+    "start": "tsx src/newsletter.ts",
+    "start:prod": "node dist/newsletter.js",
+    "preview": "tsx src/newsletter.ts --preview",
+    "preview:edit": "tsx src/newsletter.ts --preview --editable",
     "build": "tsc",
     "build:watch": "tsc --watch",
-    "clean": "rimraf dist",
-    "prebuild": "npm run clean",
-    "type-check": "tsc --noEmit",
-    "lint": "eslint src/**/*.ts",
-    "lint:fix": "eslint src/**/*.ts --fix",
-    "format": "prettier --write src/**/*.ts",
-    "format:check": "prettier --check src/**/*.ts",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "get-articles": "tsx src/scripts/getResources.ts",
-    "summarize": "tsx src/scripts/summariseArticles.ts",
-    "newsletter": "tsx src/app.ts",
-    "newsletter:full": "npm run get-articles && npm run summarize && npm run start:prod"
+    "clean": "rimraf dist"
   },
   "keywords": [
     "newsletter",
     "news",
-    "automation",
     "email",
-    "typescript",
     "gnews"
   ],
   "author": "Kailash",
@@ -42,8 +28,7 @@
     "cheerio": "^1.0.0-rc.12",
     "dotenv": "^17.2.0",
     "nodemailer": "^7.0.5",
-    "openai": "^5.10.1",
-    "tsc": "^2.0.4"
+    "openai": "^5.10.1"
   },
   "devDependencies": {
     "@types/cheerio": "^0.22.35",
@@ -55,11 +40,7 @@
     "eslint": "^8.54.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.1",
-    "jest": "^29.7.0",
-    "lint-staged": "^15.1.0",
-    "prettier": "^3.1.0",
     "rimraf": "^5.0.5",
-    "ts-jest": "^29.1.1",
     "tsx": "^4.6.0",
     "typescript": "^5.8.3"
   },

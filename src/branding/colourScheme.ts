@@ -56,7 +56,7 @@ export const colors = {
   // Material-UI Background Colors
   background: {
     default: "#ffffff", // Material-UI background default
-    paper: "#ffffff", // Material-UI background paper
+    paper: "#efefef", // Material-UI background paper
     newsletter: "#fafafa", // Light grey for newsletter wrapper
   },
 
@@ -72,16 +72,6 @@ export const colors = {
 
   // Material-UI Divider
   divider: "rgba(0, 0, 0, 0.12)",
-};
-
-export const gradients = {
-  primary: `linear-gradient(135deg, ${colors.primary.main} 0%, ${colors.primary.dark} 100%)`,
-  secondary: `linear-gradient(135deg, ${colors.secondary.main} 0%, ${colors.secondary.dark} 100%)`,
-  accent: `linear-gradient(135deg, ${colors.accent.warning} 0%, ${colors.accent.error} 100%)`,
-  newsletter: `linear-gradient(135deg, ${colors.primary.light} 0%, ${colors.secondary.light} 100%)`,
-  success: `linear-gradient(135deg, ${colors.accent.success} 0%, ${colors.accent.successLight} 100%)`,
-  warning: `linear-gradient(135deg, ${colors.accent.warning} 0%, ${colors.accent.warningLight} 100%)`,
-  info: `linear-gradient(135deg, ${colors.accent.info} 0%, ${colors.accent.infoLight} 100%)`,
 };
 
 // Material-UI Box Shadows
