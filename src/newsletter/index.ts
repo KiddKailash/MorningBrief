@@ -76,10 +76,17 @@ export class Newsletter {
     const sections = await compileAllSections(data.articles, data.marketData, data.spotlightStock);
     const html = generateHTML(sections, true); // true for preview mode
     
-    // Save preview
-    const filename = `preview-${new Date().toISOString().split('T')[0]}.html`;
+    // Get Date Data
+    const now = new Date();
+    const iso = now.toISOString();
+    const datePart = iso.split('T')[0];
+    const timePart = iso.split('T')[1]?.replace(/:/g, '-').replace(/\..+/, '') || '00-00-00';
+
+    // Names
+    const filename = `newsletter-preview-${datePart}T${timePart}.html`;
     const latestPreviewFilename = 'latest.html';
 
+    // Paths
     const filepath = join(this.previewDir, filename);
     const latestPreviewPath = join(this.previewDir, latestPreviewFilename);
 

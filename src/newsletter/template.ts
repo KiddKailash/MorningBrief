@@ -31,6 +31,8 @@ function markdownToHTML(text: string): string {
     .replace(/~~(.+?)~~/g, '<del style="text-decoration: line-through; color: rgba(0, 0, 0, 0.5);">$1</del>')
     // Code/monospace
     .replace(/`(.+?)`/g, '<code style="background-color: #f5f5f5; padding: 2px 4px; border-radius: 3px; font-family: monospace; font-size: 0.9em;">$1</code>')
+    // Images (must come before links)
+    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<div class="image-container"><img src="$2" alt="$1" class="section-image" style="width: 100%; max-width: 100%; height: auto; border-radius: 8px; margin: 15px 0;"/></div>')
     // Links
     .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" style="color: #1976d2; text-decoration: none;">$1</a>')
     // Blockquotes
@@ -334,6 +336,39 @@ export function generateHTML(
       color: rgba(0, 0, 0, 0.87);
     }
     
+    /* Image styling */
+    .image-container {
+      position: relative;
+      margin: 15px 0;
+      text-align: center;
+    }
+    
+    .section-image {
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s ease;
+    }
+    
+    .image-credit {
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.5);
+      text-align: center;
+      font-style: italic;
+      margin-top: 5px;
+    }
+    
+    .image-credit a {
+      color: rgba(0, 0, 0, 0.5);
+      text-decoration: none;
+    }
+    
+    .image-credit a:hover {
+      text-decoration: underline;
+    }
+    
     /* Links */
     a {
       color: #1976d2;
@@ -521,6 +556,7 @@ export function generatePlainText(newsletter: NewsletterSections): string {
     .replace(/\*(.+?)\*/g, '$1')      // Remove italic
     .replace(/~~(.+?)~~/g, '[STRIKETHROUGH: $1]')  // Format strikethrough
     .replace(/`(.+?)`/g, '$1')        // Remove code formatting
+    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '[IMAGE: $1 - $2]') // Format images
     .replace(/\[(.+?)\]\((.+?)\)/g, '$1 ($2)') // Format links
     .replace(/^> (.+)$/gim, '  "$1"')  // Format blockquotes
     .replace(/^#{1,4} (.+)$/gim, '\n=== $1 ===\n'); // Format headers

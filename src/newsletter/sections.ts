@@ -1,31 +1,32 @@
 /**
  * Newsletter Sections
- * 
+ *
  * ALL NEWSLETTER CONTENT SECTIONS IN ONE PLACE
  * Each function generates a specific section of the newsletter
  * Easy to find and modify any section
  */
 
-import { Article, MarketIndicator, NewsletterSections } from '../types';
-import { openai } from '../integrations/openai';
+import { Article, MarketIndicator, NewsletterSections } from "../types";
+import { openai } from "../integrations/openai";
+import { unsplashService } from "../integrations/unsplash";
 
 /**
  * Generate the newsletter header with date and greeting
  */
 export async function generateHeader(): Promise<string> {
   const date = new Date();
-  const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' });
-  
+  const dayOfWeek = date.toLocaleDateString("en-US", { weekday: "long" });
+
   const greeting = await openai.generateShortText(
     `Generate a witty, energetic morning greeting for a business newsletter on ${dayOfWeek}. Include a brief teaser about business/market news. Be conversational and engaging. Format: Start with a greeting, then add a punchy line about coffee/business.`,
     80
   );
 
-  return `# Morning Brief\n${dayOfWeek}\n\n${greeting}\n\n*Written by the Morning Brief team*`;
+  return `${greeting}`;
 }
 
 /**
- * Generate the main news section from articles
+ * Generate the main news section from articles with images
  */
 export async function generateMainNews(articles: Article[]): Promise<string> {
   if (!articles?.length) {
@@ -37,16 +38,20 @@ export async function generateMainNews(articles: Article[]): Promise<string> {
 
   const articlesText = articles
     .slice(0, 6) // Top 6 articles for better coverage
-    .map((article, i) => 
-      `Article ${i + 1}:
+    .map(
+      (article, i) =>
+        `Article ${i + 1}:
 Title: ${article.title}
 Source: ${article.source.name}
 Summary: ${article.description}
-Content: ${(article.content || '').substring(0, 600)}...
+Content: ${(article.content || "").substring(0, 600)}...
 URL: ${article.url}`
-    ).join('\n\n');
+    )
+    .join("\n\n");
 
-  const prompt = `Create a professional business newsletter HEADLINES section from these articles:
+  // Generate news content first
+  const newsContent = await openai.generateContent(
+    `Create a professional business newsletter HEADLINES section from these articles:
 
 ${articlesText}
 
@@ -66,26 +71,64 @@ Format exactly like this example:
 
 #### **Apple Unveils Revolutionary AI Assistant**
 Apple stunned the tech world today with its new AI assistant that can predict your coffee order before you even wake up. The Cupertino giant's latest innovation promises to revolutionize morning routines. [Read more](https://example.com)
-**Why this matters:** This marks Apple's most ambitious AI play yet, potentially disrupting the $100 billion virtual assistant market.`;
+**Why this matters:** This marks Apple's most ambitious AI play yet, potentially disrupting the $100 billion virtual assistant market.`,
+    2000
+  );
 
-  return await openai.generateContent(prompt, 2000);
+  // Generate AI-powered image search term based on the actual generated content
+  const imageSearchPrompt = `Based on this business newsletter content, generate a specific visual search term for finding a professional stock photo:
+
+${newsContent.substring(0, 500)}...
+
+Requirements:
+- Analyze the main themes and industries mentioned
+- Focus on concrete visual elements (offices, technology, markets, etc.)
+- Avoid abstract concepts
+- One specific search term suitable for professional business imagery
+
+Example outputs:
+"modern tech office workspace"
+"financial market trading floor"
+"corporate business meeting"
+"startup innovation lab"`;
+
+  const imageSearchTerm = await openai.generateShortText(imageSearchPrompt, 30);
+  const mainImage = await unsplashService.getImageForSection(
+    "BUSINESS NEWS",
+    imageSearchTerm
+  );
+
+  // Add image to content if available
+  if (mainImage) {
+    return `![${mainImage.alt}](${mainImage.url})
+*${mainImage.credit} - [View original](${mainImage.link})*
+
+${newsContent}`;
+  }
+
+  return newsContent;
 }
 
 /**
  * Generate market snapshot section
  */
-export async function generateMarketSnapshot(marketData: MarketIndicator[]): Promise<string> {
+export async function generateMarketSnapshot(
+  marketData: MarketIndicator[]
+): Promise<string> {
   if (!marketData?.length) return "";
 
   // Format as pipe-separated for template parsing
   const marketText = marketData
-    .map(indicator => 
-      `${indicator.symbol || indicator.name}: ${indicator.value} (${indicator.changePercent > 0 ? '+' : ''}${indicator.changePercent}%)`
-    ).join(' | ');
+    .map(
+      (indicator) =>
+        `${indicator.symbol || indicator.name}: ${indicator.value} (${indicator.changePercent > 0 ? "+" : ""}${indicator.changePercent}%)`
+    )
+    .join(" | ");
 
-  const avgChange = marketData.reduce((sum, m) => sum + m.changePercent, 0) / marketData.length;
+  const avgChange =
+    marketData.reduce((sum, m) => sum + m.changePercent, 0) / marketData.length;
   const marketMood = await openai.generateShortText(
-    `Write a single witty sentence about the market mood based on ${avgChange > 0 ? 'positive' : 'negative'} ${Math.abs(avgChange).toFixed(2)}% average movement. Be clever and avoid clichés. Reference coffee, morning, or business metaphors.`,
+    `Write a single witty sentence about the market mood based on ${avgChange > 0 ? "positive" : "negative"} ${Math.abs(avgChange).toFixed(2)}% average movement. Be clever and avoid clichés. Reference coffee, morning, or business metaphors.`,
     40
   );
 
@@ -111,7 +154,47 @@ Requirements:
 - Witty comments always in *italics*
 - Make them funny but believable enough to be real news`;
 
-  return await openai.generateContent(prompt, 400);
+  const content = await openai.generateContent(prompt, 400);
+
+  // Occasionally add an image (50% chance)
+  let icymiImage = null;
+  if (Math.random() > 0.5) {
+    // Generate AI-powered search terms based on the generated content
+    const imageSearchPrompt = `Based on this humorous business news content, generate a specific visual search term for finding a fun, professional workplace image:
+
+${content.substring(0, 300)}...
+
+Requirements:
+- Focus on workplace humor, office life, or business professionals
+- Keep it professional but lighthearted
+- Concrete visual elements only
+- One specific search term
+
+Example outputs:
+"office workers celebrating"
+"business team meeting coffee"
+"professional workplace casual atmosphere"`;
+
+    const imageSearchTerm = await openai.generateShortText(
+      imageSearchPrompt,
+      30
+    );
+    icymiImage = await unsplashService.getImageForSection(
+      "BUSINESS HUMOR",
+      imageSearchTerm
+    );
+  }
+
+  if (icymiImage) {
+    return `## 📰 IN CASE YOU MISSED IT
+
+![${icymiImage.alt}](${icymiImage.url})
+*${icymiImage.credit} - [View original](${icymiImage.link})*
+
+${content.replace(/^## 📰 IN CASE YOU MISSED IT\s*/, "")}`;
+  }
+
+  return content;
 }
 
 /**
@@ -159,7 +242,7 @@ Requirements:
 - Keep it concise`;
 
   const content = await openai.generateContent(prompt, 200);
-  return content + '\n\n*Submitted by a reader*';
+  return content + "\n\n*Submitted by a reader*";
 }
 
 /**
@@ -227,28 +310,34 @@ Keep recommendations practical and valuable.`;
 /**
  * Generate spotlight stock section with AI-generated article
  */
-export async function generateStockSpotlight(spotlightData: any): Promise<string> {
+export async function generateStockSpotlight(
+  spotlightData: any
+): Promise<string> {
   if (!spotlightData?.spotlightStock) return "";
-  
+
   const stock = spotlightData.spotlightStock;
   const articles = spotlightData.spotlightStockArticles?.results || [];
-  
-  // Prepare article summaries for AI
-  const articleSummaries = articles.slice(0, 3).map((article: any, i: number) => 
-    `Article ${i + 1}:
-Title: ${article.title}
-Publisher: ${article.publisher?.name || 'Unknown'}
-Content: ${(article.content || '').substring(0, 800)}...`
-  ).join('\n\n');
 
-  const prompt = `Write a compelling newsletter section about ${stock.name} (${stock.symbol}), which ${stock.changesPercentage > 0 ? 'surged' : 'dropped'} ${Math.abs(stock.changesPercentage).toFixed(1)}% today.
+  // Prepare article summaries for AI
+  const articleSummaries = articles
+    .slice(0, 3)
+    .map(
+      (article: any, i: number) =>
+        `Article ${i + 1}:
+Title: ${article.title}
+Publisher: ${article.publisher?.name || "Unknown"}
+Content: ${(article.content || "").substring(0, 800)}...`
+    )
+    .join("\n\n");
+
+  const prompt = `Write a compelling newsletter section about ${stock.name} (${stock.symbol}), which ${stock.changesPercentage > 0 ? "surged" : "dropped"} ${Math.abs(stock.changesPercentage).toFixed(1)}% today.
 
 Stock Details:
 - Current Price: $${stock.price}
-- Change: ${stock.changesPercentage > 0 ? '+' : ''}${stock.changesPercentage.toFixed(2)}%
-- Market Cap: $${stock.marketCap ? (stock.marketCap / 1e9).toFixed(1) + 'B' : 'N/A'}
+- Change: ${stock.changesPercentage > 0 ? "+" : ""}${stock.changesPercentage.toFixed(2)}%
+- Market Cap: $${stock.marketCap ? (stock.marketCap / 1e9).toFixed(1) + "B" : "N/A"}
 
-${articleSummaries ? `Recent News Coverage:\n${articleSummaries}` : 'No recent news available.'}
+${articleSummaries ? `Recent News Coverage:\n${articleSummaries}` : "No recent news available."}
 
 Requirements:
 1. Start with "#### ${stock.name} (${stock.symbol})"
@@ -261,31 +350,66 @@ Requirements:
 8. Professional yet engaging tone
 9. Use **bold** for the company name on first mention and key figures`;
 
-  const content = await openai.generateContent(prompt, 800);
-  // Return raw content with header - template will handle HTML conversion
-  return `## SPOTLIGHT\n\n${content}`;
+  // Generate AI-powered search terms for the spotlight stock image
+  const imageSearchPrompt = `Generate a specific, visual search term for finding a professional stock photo related to ${stock.name} (${stock.symbol}).
+
+Context: ${stock.name} ${stock.changesPercentage > 0 ? "surged" : "dropped"} ${Math.abs(stock.changesPercentage).toFixed(1)}% today.
+
+Requirements:
+- Focus on concrete visual elements (office buildings, industry, products, etc.)
+- Avoid abstract concepts
+- Make it suitable for professional newsletter images
+- One specific search term only
+
+Example outputs:
+"tech company headquarters"
+"financial trading floor"
+"pharmaceutical research laboratory"
+"automotive manufacturing plant"`;
+
+  const [content, imageSearchTerm] = await Promise.all([
+    openai.generateContent(prompt, 800),
+    openai.generateShortText(imageSearchPrompt, 30),
+  ]);
+
+  // Fetch spotlight image using AI-generated search term
+  const spotlightImage = await unsplashService.getImageForSection(
+    "STOCK SPOTLIGHT",
+    imageSearchTerm
+  );
+
+  // Add image to content if available
+  let finalContent = `## SPOTLIGHT\n\n`;
+
+  if (spotlightImage) {
+    finalContent += `![${spotlightImage.alt}](${spotlightImage.url})\n*${spotlightImage.credit} - [View original](${spotlightImage.link})*\n\n`;
+  }
+
+  finalContent += content;
+
+  return finalContent;
 }
 
 /**
  * Compile all sections into complete newsletter
  */
 export async function compileAllSections(
-  articles: Article[], 
+  articles: Article[],
   marketData: MarketIndicator[],
   spotlightStock?: any
 ): Promise<NewsletterSections> {
   console.log("📝 Generating newsletter sections...");
-  
+
   // Generate all sections in parallel for efficiency
   const [
-    header, 
-    mainNews, 
-    marketSnapshot, 
+    header,
+    mainNews,
+    marketSnapshot,
     stockSpotlight,
-    icymi, 
-    quickHits, 
-    wordOfDay, 
-    footer
+    icymi,
+    quickHits,
+    wordOfDay,
+    footer,
   ] = await Promise.all([
     generateHeader(),
     generateMainNews(articles),
@@ -294,7 +418,7 @@ export async function compileAllSections(
     generateICYMI(),
     generateQuickHits(),
     generateWordOfDay(),
-    generateFooter()
+    generateFooter(),
   ]);
 
   return {
@@ -306,6 +430,6 @@ export async function compileAllSections(
     icymi,
     quickHits,
     wordOfDay,
-    footer
+    footer,
   };
 }

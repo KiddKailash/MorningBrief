@@ -678,6 +678,6 @@ export const aggregateAllMarketData = async () => {
     majorIndicators: majorIndicators, // {symbol, name, price, change, changePercent} for S&P 500, NASDAQ, DOW, Oil, Gold
     spotlightStock: spotlightStock, // Spotlighted stock with name, ticker, price, % change, and related articles
   };
-  console.log("Market Data Retrieved:", output);
+
   return output;
 };
