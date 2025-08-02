@@ -262,10 +262,8 @@ Requirements:
 9. Use **bold** for the company name on first mention and key figures`;
 
   const content = await openai.generateContent(prompt, 800);
-  return `<div class="stock-spotlight">
-  <h2 class="section-header">SPOTLIGHT</h2>
-  ${content}
-</div>`;
+  // Return raw content with header - template will handle HTML conversion
+  return `## SPOTLIGHT\n\n${content}`;
 }
 
 /**

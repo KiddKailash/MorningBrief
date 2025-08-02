@@ -1,76 +1,78 @@
 /**
  * Email Template
- *
+ * 
  * Professional newsletter template matching Morning Brief aesthetic
  */
 
-import { NewsletterSections } from "../types";
-import { brand } from "../config/brand";
+import { NewsletterSections } from '../types';
+import { brand } from '../config/brand';
 
 /**
  * Convert markdown-style text to HTML with enhanced formatting
  */
 function markdownToHTML(text: string): string {
-  return (
-    text
-      // Headers
-      .replace(
-        /^#### (.*$)/gim,
-        '<h4 style="font-size: 18px; font-weight: bold; margin: 15px 0 10px 0; color: rgba(0, 0, 0, 0.87);">$1</h4>'
-      )
-      .replace(
-        /^### (.*$)/gim,
-        '<h3 style="font-size: 20px; margin-bottom: 10px;">$1</h3>'
-      )
-      .replace(/^## (.*$)/gim, '<p class="article-content">## $1</p>')
-      .replace(/^# (.*$)/gim, '<h1 class="newsletter-title">$1</h1>')
-      // Bold with special handling for "Why this matters" and "Bottom line"
-      .replace(
-        /\*\*Why this matters:\*\*/g,
-        '<strong><strong style="color: #ed6c02; font-weight: 600;">Why this matters:</strong>'
-      )
-      .replace(
-        /\*\*Bottom line:\*\*/g,
-        '<strong><strong style="color: #ed6c02; font-weight: 600;">Bottom line:</strong>'
-      )
-      .replace(/\*\*\*(.+?)\*\*\*/g, "<strong><em>$1</em></strong>")
-      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-      // Italic
-      .replace(/\*(.+?)\*/g, "<em>$1</em>")
-      // Code/monospace
-      .replace(
-        /`(.+?)`/g,
-        '<code style="background-color: #f5f5f5; padding: 2px 4px; border-radius: 3px; font-family: monospace; font-size: 0.9em;">$1</code>'
-      )
-      // Links
-      .replace(
-        /\[(.+?)\]\((.+?)\)/g,
-        '<a href="$2" style="color: #1976d2; text-decoration: none;">$1</a>'
-      )
-      // Blockquotes
-      .replace(
-        /^> (.+)$/gim,
-        '<blockquote style="border-left: 4px solid #42a5f5; margin: 15px 0; padding: 12px 20px; background-color: #fafafa; font-style: italic; border-radius: 0 6px 6px 0;">$1</blockquote>'
-      )
-      // Lists
-      .replace(/^- (.+)$/gim, "<li>$1</li>")
-      .replace(
-        /(<li>.*<\/li>)/s,
-        '<ul style="margin: 10px 0; padding-left: 20px;">$1</ul>'
-      )
-      // Ensure closing strong tags
-      .replace(/<strong>([^<]*?)$/gm, "<strong>$1</strong>")
-  );
+  if (!text) return '';
+  
+  // Process in specific order to avoid conflicts
+  let html = text
+    // Headers - must come before other processing
+    .replace(/^#### (.*$)/gim, '<h4 style="font-size: 18px; font-weight: bold; margin: 15px 0 10px 0; color: rgba(0, 0, 0, 0.87);">$1</h4>')
+    .replace(/^### (.*$)/gim, '<h3 style="font-size: 20px; margin-bottom: 10px;">$1</h3>')
+    .replace(/^## (.*$)/gim, '<h2 style="font-size: 18px; font-weight: bold; color: #1976d2; text-transform: uppercase; margin: 15px 0 10px 0;">$1</h2>')
+    .replace(/^# (.*$)/gim, '<h1 class="newsletter-title">$1</h1>')
+    // Special handling for "Why this matters" and "Bottom line"
+    .replace(/\*\*Why this matters:\*\*/g, '<strong style="color: #ed6c02; font-weight: 600; display: block; margin-top: 10px;">Why this matters:</strong>')
+    .replace(/\*\*Bottom line:\*\*/g, '<strong style="color: #ed6c02; font-weight: 600; display: block; margin-top: 10px;">Bottom line:</strong>')
+    // Bold and italic combinations
+    .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    // Code/monospace
+    .replace(/`(.+?)`/g, '<code style="background-color: #f5f5f5; padding: 2px 4px; border-radius: 3px; font-family: monospace; font-size: 0.9em;">$1</code>')
+    // Links
+    .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" style="color: #1976d2; text-decoration: none;">$1</a>')
+    // Blockquotes
+    .replace(/^> (.+)$/gim, '<blockquote style="border-left: 4px solid #42a5f5; margin: 15px 0; padding: 12px 20px; background-color: #fafafa; font-style: italic; border-radius: 0 6px 6px 0;">$1</blockquote>')
+    // Lists - handle each list separately
+    .replace(/^- (.+)$/gim, '<li>$1</li>');
+  
+  // Wrap consecutive <li> elements in <ul> tags
+  html = html.replace(/((?:<li>.*?<\/li>\s*)+)/g, (match) => {
+    return `<ul style="margin: 10px 0; padding-left: 20px; list-style-type: disc;">${match}</ul>`;
+  });
+  
+  // Handle paragraphs - split by double newlines, then wrap non-HTML blocks
+  const blocks = html.split(/\n\n+/);
+  html = blocks
+    .map(block => {
+      block = block.trim();
+      if (!block) return '';
+      // Don't wrap if it's already an HTML element
+      if (block.match(/^<(?:h[1-6]|ul|ol|blockquote|div|p)/i)) {
+        return block;
+      }
+      // Wrap text blocks in paragraphs
+      return `<p style="margin: 10px 0;">${block}</p>`;
+    })
+    .filter(Boolean)
+    .join('\n\n');
+  
+  return html;
 }
 
 /**
  * Format market data as HTML table
  */
 function formatMarketTable(marketData: string): string {
-  if (!marketData || !marketData.includes("|")) return marketData;
+  if (!marketData || !marketData.includes("|")) return markdownToHTML(marketData);
+
+  // Split market data into indicators and commentary
+  const parts = marketData.split('\n\n');
+  const indicatorLine = parts[0] || '';
+  const marketCommentary = parts.slice(1).join('\n\n');
 
   // Parse the market data text into indicators
-  const indicators = marketData
+  const indicators = indicatorLine
     .split("|")
     .map((item) => item.trim())
     .filter(Boolean);
@@ -103,6 +105,11 @@ function formatMarketTable(marketData: string): string {
 
   tableHTML += `</tbody>
     </table>`;
+
+  // Add market commentary if present
+  if (marketCommentary) {
+    tableHTML += markdownToHTML(marketCommentary);
+  }
 
   return tableHTML;
 }
@@ -205,7 +212,7 @@ export function generateHTML(
       font-weight: bold;
       color: #1976d2;
       text-transform: uppercase;
-      margin: 0 0 15px 0;
+      margin: 0 0 5px 0;
     }
     
     /* Markets table styling */
@@ -238,6 +245,15 @@ export function generateHTML(
     }
 
     /* Special section containers */
+    .stock-spotlight {
+      background: linear-gradient(135deg, #ed6c0208 0%, #2e7d3208 100%);
+      border: 2px solid #ed6c0240;
+      border-left: 6px solid #ed6c02;
+      border-radius: 12px;
+      margin: 25px 0;
+      padding: 20px;
+    }
+
     .icymi-section {
       background: linear-gradient(135deg, #f5f5f5 0%, #fafafa 100%);
       border: 1px solid #e0e0e0;
@@ -371,9 +387,7 @@ export function generateHTML(
   </style>
 </head>
 <body>
-  ${
-    isPreview
-      ? `
+  ${isPreview ? `
   <div style="background: #1f2937; color: white; padding: 15px; text-align: center; font-family: monospace; position: sticky; top: 0; z-index: 1000; border-bottom: 3px solid #10b981;">
     <h2 style="margin: 0; color: #10b981;">📧 Newsletter Preview</h2>
     <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.8;">Generated: ${new Date().toLocaleString()}</p>
@@ -382,18 +396,16 @@ export function generateHTML(
       <button onclick="document.querySelector('.newsletter-container').style.maxWidth = document.querySelector('.newsletter-container').style.maxWidth === '100%' ? '670px' : '100%'" style="background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 4px; margin: 0 5px; cursor: pointer;">Toggle Width</button>
     </div>
   </div>
-  `
-      : ""
-  }
+  ` : ''}
   <div class="newsletter-container">
     <div class="section-container">
       <!-- Header -->
       <!-- Top navigation bar -->
       <div class="nav-bar">
-        <a href="#" style="color: rgba(0, 0, 0, 0.6); text-decoration: none;">Share with a Friend</a>
         <span style="color: rgba(0, 0, 0, 0.6); text-decoration: none;">
           ${dateStr}
         </span>
+        <a href="#" target="_blank" style="color: rgba(0, 0, 0, 0.6); text-decoration: none;">Share with a Friend</a>
       </div>
       <div class="newsletter-header">
         <h1 class="newsletter-title">${brand.name}</h1>
@@ -410,7 +422,10 @@ export function generateHTML(
         ? `
     <div class="section-container">
       ${formatMarketTable(newsletter.marketSnapshot)}
-      ${newsletter.stockSpotlight || ''}
+      ${newsletter.stockSpotlight ? `
+      <div class="stock-spotlight">
+        ${markdownToHTML(newsletter.stockSpotlight)}
+      </div>` : ''}
     </div>
     `
         : ""
@@ -456,7 +471,7 @@ export function generateHTML(
       <div class="referral-cta">
         <h2 class="section-header">SHARE THE WEALTH</h2>
         <p class="article-content" style="color: white;">Love ${brand.name}? Share it with friends and earn rewards!</p>
-        <a href="#" style="display: inline-block; background: #efefef; color: #1976d2 !important; padding: 12px 30px; border-radius: 25px; text-decoration: none !important; font-weight: bold; margin-top: 10px;">Start Sharing →</a>
+        <a href="#" target="_blank" style="display: inline-block; background: #efefef; color: #1976d2 !important; padding: 12px 30px; border-radius: 25px; text-decoration: none !important; font-weight: bold; margin-top: 10px;">Start Sharing →</a>
       </div>
     </div>
     
@@ -464,12 +479,13 @@ export function generateHTML(
     <div class="newsletter-footer">
       ${markdownToHTML(newsletter.footer)}
       <div style="margin: 20px 0; text-align: center;">
-        <a href="#" style="color: rgba(0, 0, 0, 0.38); text-decoration: none; margin: 0 10px; font-size: 12px;">Advertise with us</a>
-        <a href="#" style="color: rgba(0, 0, 0, 0.38); text-decoration: none; margin: 0 10px; font-size: 12px;">Unsubscribe</a>
+        <a href="#" target="_blank" style="color: rgba(0, 0, 0, 0.38); text-decoration: none; margin: 0 10px; font-size: 12px;">Advertise with us</a>
+        <a href="#" target="_blank" style="color: rgba(0, 0, 0, 0.38); text-decoration: none; margin: 0 10px; font-size: 12px;">Unsubscribe</a>
+        <p class="footer-text" style="margin-top: 10px; font-size: 11px; line-height: 1.4;">
+          © ${new Date().getFullYear()} ${brand.name}. All rights reserved.
+        </p>
       </div>
-      <p class="footer-text" style="margin-top: 10px; font-size: 11px; line-height: 1.4;">
-        © ${new Date().getFullYear()} ${brand.name}. All rights reserved.
-      </p>
+
     </div>
   </div>
 </body>
@@ -484,26 +500,25 @@ export function generateHTML(
 export function generatePlainText(newsletter: NewsletterSections): string {
   const sections = [
     newsletter.header,
-    "\n=== HEADLINES ===\n",
+    '\n=== HEADLINES ===\n',
     newsletter.mainNews,
-    newsletter.marketSnapshot
-      ? "\n=== MARKETS ===\n" + newsletter.marketSnapshot
-      : "",
+    newsletter.marketSnapshot ? '\n=== MARKETS ===\n' + newsletter.marketSnapshot : '',
+    newsletter.stockSpotlight ? '\n=== SPOTLIGHT ===\n' + newsletter.stockSpotlight : '',
     newsletter.icymi,
     newsletter.quickHits,
     newsletter.wordOfDay,
-    "\n---\n",
-    newsletter.footer,
+    '\n---\n',
+    newsletter.footer
   ];
-
+  
   return sections
     .filter(Boolean)
-    .join("\n\n")
-    .replace(/\*\*\*(.+?)\*\*\*/g, "$1") // Remove bold+italic
-    .replace(/\*\*(.+?)\*\*/g, "$1") // Remove bold
-    .replace(/\*(.+?)\*/g, "$1") // Remove italic
-    .replace(/`(.+?)`/g, "$1") // Remove code formatting
-    .replace(/\[(.+?)\]\((.+?)\)/g, "$1 ($2)") // Format links
-    .replace(/^> (.+)$/gim, '  "$1"') // Format blockquotes
-    .replace(/^#{1,4} (.+)$/gim, "\n=== $1 ===\n"); // Format headers
+    .join('\n\n')
+    .replace(/\*\*\*(.+?)\*\*\*/g, '$1')  // Remove bold+italic
+    .replace(/\*\*(.+?)\*\*/g, '$1')  // Remove bold
+    .replace(/\*(.+?)\*/g, '$1')      // Remove italic
+    .replace(/`(.+?)`/g, '$1')        // Remove code formatting
+    .replace(/\[(.+?)\]\((.+?)\)/g, '$1 ($2)') // Format links
+    .replace(/^> (.+)$/gim, '  "$1"')  // Format blockquotes
+    .replace(/^#{1,4} (.+)$/gim, '\n=== $1 ===\n'); // Format headers
 }
