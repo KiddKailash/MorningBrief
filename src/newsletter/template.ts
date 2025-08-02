@@ -27,6 +27,8 @@ function markdownToHTML(text: string): string {
     .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    // Strikethrough for humorous/sarcastic corrections
+    .replace(/~~(.+?)~~/g, '<del style="text-decoration: line-through; color: rgba(0, 0, 0, 0.5);">$1</del>')
     // Code/monospace
     .replace(/`(.+?)`/g, '<code style="background-color: #f5f5f5; padding: 2px 4px; border-radius: 3px; font-family: monospace; font-size: 0.9em;">$1</code>')
     // Links
@@ -181,7 +183,7 @@ export function generateHTML(
       border: 1px solid #eeeeee;
       background-color: #ffffff;
       border-radius: 8px;
-      gap: 10px;
+      gap: 5px;
     }
     
     /* Header */
@@ -517,6 +519,7 @@ export function generatePlainText(newsletter: NewsletterSections): string {
     .replace(/\*\*\*(.+?)\*\*\*/g, '$1')  // Remove bold+italic
     .replace(/\*\*(.+?)\*\*/g, '$1')  // Remove bold
     .replace(/\*(.+?)\*/g, '$1')      // Remove italic
+    .replace(/~~(.+?)~~/g, '[STRIKETHROUGH: $1]')  // Format strikethrough
     .replace(/`(.+?)`/g, '$1')        // Remove code formatting
     .replace(/\[(.+?)\]\((.+?)\)/g, '$1 ($2)') // Format links
     .replace(/^> (.+)$/gim, '  "$1"')  // Format blockquotes

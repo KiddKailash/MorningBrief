@@ -8,7 +8,10 @@
 import { Article, MarketIndicator } from '../types';
 import { gnews } from '../integrations/gnews';
 import { scraper } from '../integrations/scraper';
-import { aggregateAllMarketData } from '../integrations/marketData';
+// TODO: Remove this once testing is done
+// import { aggregateAllMarketData } from '../integrations/marketData'; 
+// @ts-ignore
+import aggregateAllMarketData from '../dummy-data/marketData';
 
 /**
  * Fetch and enrich news articles
@@ -62,9 +65,9 @@ export async function fetchMarketData(): Promise<{ indicators: MarketIndicator[]
     const marketData = await aggregateAllMarketData();
     
     // Transform major indicators to our format
-    const indicators: MarketIndicator[] = marketData.majorIndicators.map(indicator => ({
+    const indicators: MarketIndicator[] = marketData.majorIndicators.map((indicator: any) => ({
       name: indicator.name,
-      symbol: indicator.symbol,
+      symbol: indicator.name,
       value: indicator.price,
       changePercent: indicator.changePercent
     }));
@@ -74,7 +77,7 @@ export async function fetchMarketData(): Promise<{ indicators: MarketIndicator[]
       const spotlight = marketData.spotlightStock.spotlightStock;
       indicators.push({
         name: `${spotlight.name} (Spotlight)`,
-        symbol: spotlight.symbol,
+        symbol: spotlight.name,
         value: spotlight.price,
         changePercent: spotlight.changesPercentage
       });

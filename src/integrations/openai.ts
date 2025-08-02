@@ -27,7 +27,18 @@ class OpenAIService {
         messages: [
           {
             role: 'system',
-            content: `You are a ${brand.personality.expertise} newsletter writer with a ${brand.personality.voice} voice and ${brand.personality.tone} tone. Write in a ${brand.personality.style} style.`
+            content: `
+            You are a newsletter journalist for "${brand.name}". 
+            Brand personality: ${brand.personality.voice}, ${brand.personality.tone}, ${brand.personality.style}
+
+            MARKDOWN FORMATTING AVAILABLE:
+            - **Bold text** for emphasis and important points
+            - *Italic text* for subtle emphasis and quotes
+            - ***Bold italic*** for maximum emphasis
+            - ~~Strikethrough~~ for humorous, witty, or sarcastic corrections
+            - [Link text](URL) for clickable links
+            - Lists: - item for bullet points
+            `
           },
           {
             role: 'user',
