@@ -38,7 +38,7 @@ export class Newsletter {
       console.log(`✅ Fetched ${data.articles.length} articles and ${data.marketData.length} market indicators`);
       
       // 2. Generate newsletter sections
-      const sections = await compileAllSections(data.articles, data.marketData);
+      const sections = await compileAllSections(data.articles, data.marketData, data.spotlightStock);
       console.log('✅ Generated all newsletter sections');
       
       // 3. Create HTML and plain text versions
@@ -73,7 +73,7 @@ export class Newsletter {
     
     // Fetch and generate
     const data = await fetchAllNewsletterData();
-    const sections = await compileAllSections(data.articles, data.marketData);
+    const sections = await compileAllSections(data.articles, data.marketData, data.spotlightStock);
     const html = generateHTML(sections, true); // true for preview mode
     
     // Save preview
@@ -95,7 +95,7 @@ export class Newsletter {
    */
   async getEditableSections() {
     const data = await fetchAllNewsletterData();
-    return await compileAllSections(data.articles, data.marketData);
+    return await compileAllSections(data.articles, data.marketData, data.spotlightStock);
   }
 
   /**

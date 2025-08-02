@@ -225,11 +225,56 @@ Keep recommendations practical and valuable.`;
 }
 
 /**
+ * Generate spotlight stock section with AI-generated article
+ */
+export async function generateStockSpotlight(spotlightData: any): Promise<string> {
+  if (!spotlightData?.spotlightStock) return "";
+  
+  const stock = spotlightData.spotlightStock;
+  const articles = spotlightData.spotlightStockArticles?.results || [];
+  
+  // Prepare article summaries for AI
+  const articleSummaries = articles.slice(0, 3).map((article: any, i: number) => 
+    `Article ${i + 1}:
+Title: ${article.title}
+Publisher: ${article.publisher?.name || 'Unknown'}
+Content: ${(article.content || '').substring(0, 800)}...`
+  ).join('\n\n');
+
+  const prompt = `Write a compelling newsletter section about ${stock.name} (${stock.symbol}), which ${stock.changesPercentage > 0 ? 'surged' : 'dropped'} ${Math.abs(stock.changesPercentage).toFixed(1)}% today.
+
+Stock Details:
+- Current Price: $${stock.price}
+- Change: ${stock.changesPercentage > 0 ? '+' : ''}${stock.changesPercentage.toFixed(2)}%
+- Market Cap: $${stock.marketCap ? (stock.marketCap / 1e9).toFixed(1) + 'B' : 'N/A'}
+
+${articleSummaries ? `Recent News Coverage:\n${articleSummaries}` : 'No recent news available.'}
+
+Requirements:
+1. Start with "#### ${stock.name} (${stock.symbol})"
+2. Open with an attention-grabbing sentence about the price movement
+3. Synthesize information from the articles to explain WHY this movement happened
+4. Include specific details, numbers, and context
+5. Add analysis of what this means for investors
+6. End with forward-looking perspective
+7. 3-4 paragraphs total
+8. Professional yet engaging tone
+9. Use **bold** for the company name on first mention and key figures`;
+
+  const content = await openai.generateContent(prompt, 800);
+  return `<div class="stock-spotlight">
+  <h2 class="section-header">SPOTLIGHT</h2>
+  ${content}
+</div>`;
+}
+
+/**
  * Compile all sections into complete newsletter
  */
 export async function compileAllSections(
   articles: Article[], 
-  marketData: MarketIndicator[]
+  marketData: MarketIndicator[],
+  spotlightStock?: any
 ): Promise<NewsletterSections> {
   console.log("📝 Generating newsletter sections...");
   
@@ -238,6 +283,7 @@ export async function compileAllSections(
     header, 
     mainNews, 
     marketSnapshot, 
+    stockSpotlight,
     icymi, 
     quickHits, 
     wordOfDay, 
@@ -246,6 +292,7 @@ export async function compileAllSections(
     generateHeader(),
     generateMainNews(articles),
     generateMarketSnapshot(marketData),
+    generateStockSpotlight(spotlightStock),
     generateICYMI(),
     generateQuickHits(),
     generateWordOfDay(),
@@ -257,7 +304,7 @@ export async function compileAllSections(
     intro: "", // Intro is part of header now
     mainNews,
     marketSnapshot,
-    stockSpotlight: "", // Can be added if needed
+    stockSpotlight,
     icymi,
     quickHits,
     wordOfDay,

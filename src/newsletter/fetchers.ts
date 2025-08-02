@@ -8,6 +8,7 @@
 import { Article, MarketIndicator } from '../types';
 import { gnews } from '../integrations/gnews';
 import { scraper } from '../integrations/scraper';
+import { aggregateAllMarketData } from '../integrations/marketData';
 
 /**
  * Fetch and enrich news articles
@@ -53,40 +54,46 @@ export async function fetchArticles(): Promise<Article[]> {
 /**
  * Fetch market data from various sources
  */
-export async function fetchMarketData(): Promise<MarketIndicator[]> {
+export async function fetchMarketData(): Promise<{ indicators: MarketIndicator[], spotlightStock: any }> {
   console.log("📊 Fetching market data...");
   
   try {
-    // For now, return mock data with realistic values
-    // TODO: Integrate with real market data API
-    const baseData = [
-      { name: "S&P 500", symbol: "SPX", baseValue: 4500, volatility: 1.5 },
-      { name: "Dow Jones", symbol: "DJI", baseValue: 35000, volatility: 1.2 },
-      { name: "NASDAQ", symbol: "IXIC", baseValue: 14000, volatility: 2.0 },
-      { name: "Gold", symbol: "GLD", baseValue: 1950, volatility: 0.8 },
-      { name: "Bitcoin", symbol: "BTC", baseValue: 45000, volatility: 5.0 },
-      { name: "Crude Oil (WTI)", symbol: "CL", baseValue: 75, volatility: 2.5 },
-      { name: "10-Year Treasury Yield", symbol: "TNX", baseValue: 4.25, volatility: 0.5 }
-    ];
+    // Use the real market data service
+    const marketData = await aggregateAllMarketData();
     
-    // Generate realistic daily changes
-    const mockData: MarketIndicator[] = baseData.map(item => {
-      const changePercent = (Math.random() - 0.5) * 2 * item.volatility;
-      const value = item.baseValue * (1 + changePercent / 100);
-      
-      return {
-        name: item.name,
-        symbol: item.symbol,
-        value: parseFloat(value.toFixed(2)),
-        changePercent: parseFloat(changePercent.toFixed(2))
-      };
-    });
+    // Transform major indicators to our format
+    const indicators: MarketIndicator[] = marketData.majorIndicators.map(indicator => ({
+      name: indicator.name,
+      symbol: indicator.symbol,
+      value: indicator.price,
+      changePercent: indicator.changePercent
+    }));
     
-    return mockData;
+    // Add the spotlight stock to the indicators list
+    if (marketData.spotlightStock?.spotlightStock) {
+      const spotlight = marketData.spotlightStock.spotlightStock;
+      indicators.push({
+        name: `${spotlight.name} (Spotlight)`,
+        symbol: spotlight.symbol,
+        value: spotlight.price,
+        changePercent: spotlight.changesPercentage
+      });
+    }
+    
+    return {
+      indicators,
+      spotlightStock: marketData.spotlightStock
+    };
     
   } catch (error) {
     console.error("Error fetching market data:", error);
-    return [];
+    // Return mock data as fallback
+    const mockIndicators: MarketIndicator[] = [
+      { name: "S&P 500", symbol: "SPX", value: 4500, changePercent: 0.5 },
+      { name: "Dow Jones", symbol: "DJI", value: 35000, changePercent: 0.3 },
+      { name: "NASDAQ", symbol: "IXIC", value: 14000, changePercent: 0.8 }
+    ];
+    return { indicators: mockIndicators, spotlightStock: null };
   }
 }
 
@@ -96,14 +103,15 @@ export async function fetchMarketData(): Promise<MarketIndicator[]> {
 export async function fetchAllNewsletterData() {
   console.log("🚀 Fetching all newsletter data...");
   
-  const [articles, marketData] = await Promise.all([
+  const [articles, marketDataResult] = await Promise.all([
     fetchArticles(),
     fetchMarketData()
   ]);
   
   return {
     articles,
-    marketData,
+    marketData: marketDataResult.indicators,
+    spotlightStock: marketDataResult.spotlightStock,
     fetchedAt: new Date()
   };
 }

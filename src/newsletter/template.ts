@@ -410,6 +410,7 @@ export function generateHTML(
         ? `
     <div class="section-container">
       ${formatMarketTable(newsletter.marketSnapshot)}
+      ${newsletter.stockSpotlight || ''}
     </div>
     `
         : ""

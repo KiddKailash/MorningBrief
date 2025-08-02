@@ -25,11 +25,23 @@ export interface MarketIndicator {
   symbol?: string;
 }
 
+// Spotlight stock types
+export interface SpotlightStock {
+  symbol: string;
+  name: string;
+  price: number;
+  change: number;
+  changesPercentage: number;
+  marketCap?: number;
+  articles?: any[];
+}
+
 // Newsletter structure
 export interface NewsletterData {
   date: Date;
   articles: Article[];
   marketData: MarketIndicator[];
+  spotlightStock?: SpotlightStock;
 }
 
 export interface NewsletterSections {
