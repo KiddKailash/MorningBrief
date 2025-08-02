@@ -1,1 +1,0 @@
-0 8 * * * cd /Users/kailashkidd/Desktop/BuildAndShip/NewsNewsletter && npm start >> /tmp/newsletter.log 2>&1
