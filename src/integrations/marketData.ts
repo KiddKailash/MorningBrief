@@ -13,15 +13,7 @@
 
 import dotenv from "dotenv";
 import { scraper } from "./scraper";
-
-// Type definitions for Alpha Vantage market data
-interface MarketDataPoint {
-  symbol: string;
-  name: string;
-  price: number;
-  change: number;
-  changePercent: number;
-}
+import { MarketDataPoint, PolygonNewsResponseWithContent, PolygonNewsResponse, PolygonArticleWithContent} from '../types'
 
 /**
  * Fetches crude oil data using Alpha Vantage WTI API
@@ -165,48 +157,7 @@ dotenv.config();
 
 // ~ TYPE DEFINITIONS
 
-/** Polygon API article structure */
-interface PolygonArticle {
-  id: string;
-  publisher: {
-    name: string;
-    homepage_url: string;
-    logo_url: string;
-    favicon_url: string;
-  };
-  title: string;
-  author: string;
-  published_utc: string;
-  article_url: string;
-  tickers: string[];
-  amp_url: string;
-  image_url: string;
-  description: string;
-  keywords: string[];
-}
 
-/** Polygon API article with scraped content */
-interface PolygonArticleWithContent extends PolygonArticle {
-  content: string;
-}
-
-/** Polygon API response structure */
-interface PolygonNewsResponse {
-  results: PolygonArticle[];
-  status: string;
-  request_id: string;
-  count: number;
-  next_url?: string;
-}
-
-/** Polygon API response with scraped content */
-interface PolygonNewsResponseWithContent {
-  results: PolygonArticleWithContent[];
-  status: string;
-  request_id: string;
-  count: number;
-  next_url?: string;
-}
 
 // ~ PRIVATE HELPER FUNCTIONS
 
@@ -263,10 +214,6 @@ const stockSpotlight = async () => {
     return absChangeB - absChangeA; // Descending order
   });
 
-  // console.log(
-  //   `Processing ${allMovers.length} stocks for market cap analysis...`
-  // );
-
   // Enrich each stock with market cap data calculated from outstanding shares * price
   const stocksWithMarketCap = [];
   for (let i = 0; i < allMovers.length; i++) {
@@ -295,10 +242,7 @@ const stockSpotlight = async () => {
       // Add delay to avoid rate limiting (200ms between requests)
       await new Promise((resolve) => setTimeout(resolve, 200));
     } catch (error) {
-      // console.log(
-      //   `Failed to fetch shares outstanding for ${stock.symbol}:`,
-      //   error
-      // );
+
       // Still add the stock but with 0 market cap (will be filtered out)
       stocksWithMarketCap.push({
         ...stock,
@@ -315,7 +259,6 @@ const stockSpotlight = async () => {
   );
 
   if (validStocks.length === 0) {
-    // console.log("No stocks with valid market cap data found");
     return {
       biggestGainerData,
       biggestLoserData,
@@ -345,8 +288,8 @@ const stockSpotlight = async () => {
         ? (stock.marketCap - minMarketCap) / (maxMarketCap - minMarketCap)
         : 1;
 
-    // Combined weighted score: 60% movement + 40% size
-    const combinedScore = changeScore * 0.6 + marketCapScore * 0.4;
+    // Combined weighted score: 40% movement + 60% size
+    const combinedScore = changeScore * 0.4 + marketCapScore * 0.6;
 
     return {
       ...stock,
@@ -361,29 +304,11 @@ const stockSpotlight = async () => {
 
   // Find the original biggest mover (by absolute change only) for comparison
   const biggestMover = allMovers[0] || null;
-  const topThreeCandidates = scoredStocks.slice(0, 3);
-
-  // Display analysis results
-  // console.log("\n=== STOCK SPOTLIGHT ANALYSIS ===");
-  // console.log("Top 3 candidates by combined score:");
-  // topThreeCandidates.forEach((stock, idx) => {
-  //   console.log(`${idx + 1}. ${stock.symbol} (${stock.name})`);
-  //   console.log(
-  //     `   Change: ${stock.changesPercentage}% (Score: ${stock.changeScore.toFixed(3)})`
-  //   );
-  //   console.log(
-  //     `   Market Cap: $${(stock.marketCap / 1e6).toFixed(1)}M (Score: ${stock.marketCapScore.toFixed(3)})`
-  //   );
-  //   console.log(`   Combined Score: ${stock.combinedScore.toFixed(3)}\n`);
-  // });
-
-  // console.log(`Biggest Mover: ${biggestMover.symbol} (${biggestMover.name})`);
-  // console.log(`Change: ${biggestMover.changesPercentage}%`);
-  // console.log(`Market Cap: $${(biggestMover.marketCap / 1e6).toFixed(1)}M`);
+  const topCandidates = scoredStocks.slice(0, 5);
 
   return {
     biggestMover: biggestMover,
-    topThreeCandidates: topThreeCandidates,
+    topCandidates: topCandidates,
   };
 };
 
@@ -444,7 +369,6 @@ const getArticlesOnStock = async (
         author: article.author,
         tickers: article.tickers,
         image_url: article.image_url,
-        // Required fields for interface compliance
         id: article.id,
         published_utc: article.published_utc,
         amp_url: article.amp_url,
@@ -600,8 +524,8 @@ const getArticlesOnSpotlightedStock = async () => {
 
   // Check if we have candidates to work with
   if (
-    !spotlightData.topThreeCandidates ||
-    spotlightData.topThreeCandidates.length === 0
+    !spotlightData.topCandidates ||
+    spotlightData.topCandidates.length === 0
   ) {
     // console.log("[WARN] No spotlight candidates available");
     return {
@@ -616,26 +540,14 @@ const getArticlesOnSpotlightedStock = async () => {
   }
 
   // Try each of the top 3 candidates in order until we find one with recent articles
-  for (let i = 0; i < spotlightData.topThreeCandidates.length; i++) {
-    const candidate = spotlightData.topThreeCandidates[i];
-    // console.log(
-    //   `\n[INFO] Trying candidate ${i + 1}: ${candidate.symbol} (${candidate.name})`
-    // );
-    // console.log(
-    //   `[INFO] Change: ${candidate.changesPercentage}%, Market Cap: $${(candidate.marketCap / 1e6).toFixed(1)}M`
-    // );
+  for (let i = 0; i < spotlightData.topCandidates.length; i++) {
+    const candidate = spotlightData.topCandidates[i];
 
     // Fetch and scrape articles for this candidate
     const articlesResult = await getArticlesOnStock(candidate.symbol);
 
     // Check if this candidate has recent articles
     if (articlesResult.results && articlesResult.results.length > 0) {
-      // console.log(
-      //   `[SUCCESS] Found ${articlesResult.results.length} recent articles for ${candidate.symbol}`
-      // );
-      // console.log(
-      //   `[INFO] Selected spotlight stock: ${candidate.symbol} - ${candidate.name}\n`
-      // );
 
       const output = {
         spotlightStockArticles: articlesResult,
@@ -650,12 +562,9 @@ const getArticlesOnSpotlightedStock = async () => {
     }
   }
 
-  // If we get here, none of the top 3 candidates had recent articles
+  // If we get here, none of the top candidates had recent articles
   // Return the first candidate anyway with empty articles
-  const fallbackCandidate = spotlightData.topThreeCandidates[0];
-  // console.log(
-  //   `[WARN] No candidates had recent articles. Using fallback: ${fallbackCandidate.symbol}`
-  // );
+  const fallbackCandidate = spotlightData.topCandidates[0];
 
   return {
     spotlightStockArticles: {
