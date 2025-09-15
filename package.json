@@ -23,6 +23,7 @@
   ],
   "author": "Kailash",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.58.0",
     "axios": "^1.11.0",
     "cheerio": "^1.0.0-rc.12",
     "dotenv": "^17.2.0",
@@ -51,6 +52,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/news-newsletter.git"
+    "url": "https://github.com/KiddKailash/MorningBrief"
   }
 }
