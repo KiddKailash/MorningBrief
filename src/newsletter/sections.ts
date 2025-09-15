@@ -6,38 +6,136 @@
  * Easy to find and modify any section
  */
 
-import { Article, MarketIndicator, NewsletterSections } from "../types";
-import { openai } from "../integrations/openai";
+import {
+  Article,
+  MarketIndicator,
+  NewsletterSections,
+  CategorizedArticles,
+} from "../types";
+import { ai } from "../integrations/ai";
 import { unsplashService } from "../integrations/unsplash";
 
 /**
  * Generate the newsletter header with date and greeting
  */
-export async function generateHeader(): Promise<string> {
+export async function generateHeader(sources: Article[]): Promise<string> {
+  if (!sources?.length) {
+    const date = new Date();
+    const dayOfWeek = date.toLocaleDateString("en-US", { weekday: "long" });
+    return `Good Morning! Welcome to your ${dayOfWeek} business briefing.`;
+  }
+
   const date = new Date();
   const dayOfWeek = date.toLocaleDateString("en-US", { weekday: "long" });
 
-  const greeting = await openai.generateShortText(
-    `Generate a witty, energetic morning greeting for a business newsletter on ${dayOfWeek}. Include a brief teaser about business/market news. Be conversational and engaging. Format: Start with a greeting, then add a punchy line about coffee/business.`,
-    80
+  // Format article sources with their scraped content for AI
+  const sourcesText = sources
+    .slice(0, 3)
+    .map(
+      (article, i) =>
+        `Article ${i + 1}:
+          Title: ${article.title}
+          Source: ${article.source.name}
+          Summary: ${article.description}
+          Content: ${(article.content || "").substring(0, 500)}...
+          URL: ${article.url}`
+    )
+    .join("\n\n");
+
+  const greeting = await ai.generateShortText(
+    `Generate an engaging hook for a business newsletter on ${dayOfWeek}. Start with "Good Morning!" or another greeting, 
+      then move swiftly on to an observation about current events or business using ONLY ONE of these article sources:
+      ${sourcesText}
+      
+      Make it conversational, concise, and reference specific key details from the article.`,
+    400
   );
 
   return `${greeting}`;
 }
 
 /**
- * Generate the main news section from articles with images
+ * Generate Economy section from business articles
  */
-export async function generateMainNews(articles: Article[]): Promise<string> {
-  if (!articles?.length) {
-    return await openai.generateShortText(
-      "Write a brief, apologetic message about no news being available today. Keep it light and promise better content tomorrow.",
-      30
-    );
+export async function generateEconomySection(
+  businessArticles: Article[]
+): Promise<string> {
+  if (!businessArticles?.length) {
+    return "";
   }
 
-  const articlesText = articles
-    .slice(0, 6) // Top 6 articles for better coverage
+  // Select the top business/economy article
+  const topArticle = businessArticles[0];
+  if (!topArticle) {
+    return "";
+  }
+
+  const articleContent = `Article:
+    Title: ${topArticle.title}
+    Source: ${topArticle.source.name}
+    Summary: ${topArticle.description}
+    Content: ${(topArticle.content || "").substring(0, 1000)}...
+    URL: ${topArticle.url}
+    `;
+
+  const economyContent = await ai.generateContent(
+    `Write a detailed but brief economic news section. 
+    
+    Use this article as the basis:
+    ${articleContent}
+
+    Requirements:
+    1. Start with a compelling headline that captures the economic impact
+    2. Explain complex economic concepts in simple terms
+    3. Include specific numbers, data, and context
+    4. Add analysis of what this means for readers
+    5. End with forward-looking implications
+    6. Use 1-3 paragraphs
+    7. Include relevant subheadings for structure
+    8. Make it engaging and accessible to non-experts
+    9. Include the original article URL naturally in the text, it may be embedded anywhere relevant using [text](url). Do not mention the article authors, just embed the link naturally.
+    `,    
+    2000
+  );
+
+  // Generate a search term for the economy image
+  const unsplashSearchTerm =
+    await ai.generateUnsplashSearchTerm(articleContent);
+
+  // Get an economy-related image
+  const economyImage = await unsplashService.getImageForSection(
+    "ECONOMY",
+    unsplashSearchTerm
+  );
+
+  if (economyImage) {
+    return `##### ECONOMY
+
+![${economyImage.alt}](${economyImage.url})
+*[${economyImage.credit}](${economyImage.link})*
+
+${economyContent}`;
+  }
+
+  return `##### ECONOMY
+
+${economyContent}`;
+}
+
+/**
+ * Generate World section from world news articles
+ */
+export async function generateWorldSection(
+  worldArticles: Article[]
+): Promise<string> {
+  if (!worldArticles?.length) {
+    return "";
+  }
+
+  // Select top 3 world news articles
+  const topArticles = worldArticles.slice(0, 3);
+
+  const articlesText = topArticles
     .map(
       (article, i) =>
         `Article ${i + 1}:
@@ -49,186 +147,242 @@ URL: ${article.url}`
     )
     .join("\n\n");
 
-  // Generate news content first
-  const newsContent = await openai.generateContent(
-    `Create a professional business newsletter HEADLINES section from these articles:
+  const worldContent = await ai.generateContent(
+    `Create a "World" section with the format "Tour de headlines". Use these world news articles:
 
 ${articlesText}
 
 Requirements:
-1. Group articles into 2-3 thematic sections (e.g., "## Tech Titans", "## Market Moves", "## Corporate Chronicles")
-2. For EACH article create:
-   - #### **Bold headline that captures the essence** (use ####)
-   - 2-3 sentence engaging summary with context
-   - Include [Read more](url) link naturally in the text
-   - End with either "**Why this matters:** [insight]" OR "**Bottom line:** [key takeaway]"
-3. Use **bold** for all company names and key figures
-4. Professional yet conversational tone
-5. Make it scannable and engaging
+1. Create bullet points for each story starting with a bold emoji or symbol, link the article url to the article naturally in the text, it may be embedded anywhere relevant using [text](url). Do not mention the article authors, just embed the link naturally.
+2. Each bullet should be 1-2 sentences maximum.
+3. Include specific details, names, and context.
+4. Add clever commentary or observations.
+5. Make it informative but engaging.
 
-Format exactly like this example:
-## Tech Titans
+Format like this example:
 
-#### **Apple Unveils Revolutionary AI Assistant**
-Apple stunned the tech world today with its new AI assistant that can predict your coffee order before you even wake up. The Cupertino giant's latest innovation promises to revolutionize morning routines. [Read more](https://example.com)
-**Why this matters:** This marks Apple's most ambitious AI play yet, potentially disrupting the $100 billion virtual assistant market.`,
+ **Trump says he repositioned nuclear subs after Russian official's threats.** In an escalation of tensions with Russia, President Trump said on social media yesterday that he had "ordered two nuclear submarines" to be moved into "appropriate regions".
+
+Focus on international politics, conflicts, trade, and major global events.`,
     2000
   );
 
-  // Generate AI-powered image search term based on the actual generated content
-  const imageSearchPrompt = `Based on this business newsletter content, generate a specific visual search term for finding a professional stock photo:
+  return `##### WORLD
 
-${newsContent.substring(0, 500)}...
+${worldContent}`;
+}
 
-Requirements:
-- Analyze the main themes and industries mentioned
-- Focus on concrete visual elements (offices, technology, markets, etc.)
-- Avoid abstract concepts
-- One specific search term suitable for professional business imagery
-
-Example outputs:
-"modern tech office workspace"
-"financial market trading floor"
-"corporate business meeting"
-"startup innovation lab"`;
-
-  const imageSearchTerm = await openai.generateShortText(imageSearchPrompt, 30);
-  const mainImage = await unsplashService.getImageForSection(
-    "BUSINESS NEWS",
-    imageSearchTerm
-  );
-
-  // Add image to content if available
-  if (mainImage) {
-    return `![${mainImage.alt}](${mainImage.url})
-*${mainImage.credit} - [View original](${mainImage.link})*
-
-${newsContent}`;
+/**
+ * Generate Retail section from technology/entertainment articles
+ */
+export async function generateRetailSection(
+  techArticles: Article[],
+  entertainmentArticles: Article[]
+): Promise<string> {
+  // Combine and select best article for retail focus
+  const allArticles = [...techArticles, ...entertainmentArticles];
+  if (!allArticles?.length) {
+    return "";
   }
 
-  return newsContent;
+  const topArticle = allArticles[0];
+  if (!topArticle) {
+    return "";
+  }
+
+  const articleContent = `Article:
+Title: ${topArticle.title}
+Source: ${topArticle.source.name}
+Summary: ${topArticle.description}
+Content: ${(topArticle.content || "").substring(0, 1000)}...
+URL: ${topArticle.url}`;
+
+  const retailContent = await ai.generateContent(
+    `Write a retail/consumer focused section. Use this article as inspiration to focus on a company's product, business strategy, or consumer impact:
+
+${articleContent}
+
+Requirements:
+1. Focus on consumer products, brand strategies, or market trends
+2. Include specific details about products, pricing, market impact
+3. Add commentary about consumer behavior or business strategy
+4. Use 1-2 paragraphs
+5. Include subheadings for structure
+6. Make it relatable to everyday consumers and investors
+`,
+    2400
+  );
+
+  // Generate a search term for the retail image
+  const unsplashSearchTerm = await ai.generateUnsplashSearchTerm(retailContent);
+
+  // Get a retail-related image
+  const retailImage = await unsplashService.getImageForSection(
+    "RETAIL",
+    unsplashSearchTerm
+  );
+
+  if (retailImage) {
+    return `##### RETAIL
+
+![${retailImage.alt}](${retailImage.url})
+*[${retailImage.credit}](${retailImage.link})*
+
+${retailContent}`;
+  } else {
+    return `##### RETAIL
+
+${retailContent}`;
+  }
 }
 
 /**
  * Generate market snapshot section
  */
 export async function generateMarketSnapshot(
-  marketData: MarketIndicator[]
+  marketData: MarketIndicator[],
+  spotlightStock?: any
 ): Promise<string> {
   if (!marketData?.length) return "";
 
+  // Separate regular indicators from spotlight stock
+  let regularIndicators = marketData.filter(indicator => 
+    !indicator.name.includes('(Spotlight)')
+  );
+  
+  // Add spotlight stock as final entry if provided
+  if (spotlightStock?.spotlightStock) {
+    const spotlight = spotlightStock.spotlightStock;
+    regularIndicators.push({
+      name: spotlight.name,
+      symbol: spotlight.symbol,
+      value: spotlight.price,
+      changePercent: spotlight.changesPercentage,
+    });
+  }
+
   // Format as pipe-separated for template parsing
-  const marketText = marketData
+  const marketText = regularIndicators
     .map(
-      (indicator) =>
-        `${indicator.symbol || indicator.name}: ${indicator.value} (${indicator.changePercent > 0 ? "+" : ""}${indicator.changePercent}%)`
+      (indicator) => {
+        const changePercent = typeof indicator.changePercent === 'string' 
+          ? parseFloat(indicator.changePercent) 
+          : indicator.changePercent;
+        const validChangePercent = isNaN(changePercent) ? 0 : changePercent;
+        return `${indicator.symbol || indicator.name}: ${indicator.value} (${validChangePercent > 0 ? "+" : ""}${validChangePercent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%)`;
+      }
     )
     .join(" | ");
 
-  const avgChange =
-    marketData.reduce((sum, m) => sum + m.changePercent, 0) / marketData.length;
-  const marketMood = await openai.generateShortText(
-    `Write a single witty sentence about the market mood based on ${avgChange > 0 ? "positive" : "negative"} ${Math.abs(avgChange).toFixed(2)}% average movement. Be clever and avoid clichés. Reference coffee, morning, or business metaphors.`,
-    40
+  const marketMood = await ai.generateShortText(
+    `Write a brief 2-3 sentence analysis of the market and investor sentiment based on these market indicators: ${marketText}. Focus on overall market trends and what this means for investors.`,
+    1000
   );
 
-  return `${marketText}\n\n${marketMood}`;
+  return `${marketText}
+
+${marketMood}`;
 }
 
 /**
  * Generate In Case You Missed It section
  */
-export async function generateICYMI(): Promise<string> {
-  const prompt = `Generate 5 quirky "In Case You Missed It" business news items.
+export async function generateICYMI(articles: Article[]): Promise<string> {
+  if (!articles?.length) {
+    return "";
+  }
+
+  // Select diverse articles from different sources
+  const selectedArticles = articles.slice(0, 8); // More articles for better variety
+
+  const articlesText = selectedArticles
+    .map(
+      (article, i) =>
+        `${i + 1}. ${article.title} - ${article.source.name} (${article.url})`
+    )
+    .join("\n");
+
+  const prompt = `Generate 5 quirky "In Case You Missed It" business news items. Use these diverse articles from various categories: 
+
+${articlesText}
 
 Format EXACTLY like this:
-## 📰 IN CASE YOU MISSED IT
+Have you heard...
 
-- **Company Name** does something unexpected — *witty one-liner comment*
-- **Another Company** announces something absurd — *sarcastic observation*
+Here's everything that didn't make it into this week's newsletters but we immediately sent to the group chat.
 
-Requirements:
-- Mix real tech/business companies with plausible but humorous scenarios
-- Each item is ONE sentence only
-- Company names always in **bold**
-- Witty comments always in *italics*
-- Make them funny but believable enough to be real news`;
+ **Google** paid $12,500 to a man who was photographed naked by a Street View cam while in his yard, exposing his rear end. That's a violation of privacy, no ifs, ands, or butts about it.
 
-  const content = await openai.generateContent(prompt, 400);
-
-  // Occasionally add an image (50% chance)
-  let icymiImage = null;
-  if (Math.random() > 0.5) {
-    // Generate AI-powered search terms based on the generated content
-    const imageSearchPrompt = `Based on this humorous business news content, generate a specific visual search term for finding a fun, professional workplace image:
-
-${content.substring(0, 300)}...
+ **Authorities in Chile** are returning six watches that were stolen from Keanu Reeves in 2023. Scary to think what would have happened to the thieves if the watches were puppies.
 
 Requirements:
-- Focus on workplace humor, office life, or business professionals
-- Keep it professional but lighthearted
-- Concrete visual elements only
-- One specific search term
+- Start each item with a bullet point and company/organization in **bold** with the link to the article over the entity name using [entity](article link)
+- Each item should be factual, and humorous.
+- Keep the tone playful and conversational
+- Mix different types of companies and situations
+- Use the provided articles and make it engaging
+`;
 
-Example outputs:
-"office workers celebrating"
-"business team meeting coffee"
-"professional workplace casual atmosphere"`;
+  const content = await ai.generateContent(prompt, 1200);
+  return `##### In Case You Missed It
 
-    const imageSearchTerm = await openai.generateShortText(
-      imageSearchPrompt,
-      30
-    );
-    icymiImage = await unsplashService.getImageForSection(
-      "BUSINESS HUMOR",
-      imageSearchTerm
-    );
-  }
-
-  if (icymiImage) {
-    return `## 📰 IN CASE YOU MISSED IT
-
-![${icymiImage.alt}](${icymiImage.url})
-*${icymiImage.credit} - [View original](${icymiImage.link})*
-
-${content.replace(/^## 📰 IN CASE YOU MISSED IT\s*/, "")}`;
-  }
-
-  return content;
+  ${content}`;
 }
 
 /**
- * Generate Quick Hits section
+ * Generate News section (What else is brewing)
  */
-export async function generateQuickHits(): Promise<string> {
-  const prompt = `Generate 5 rapid-fire business updates for a "Quick Hits" section.
+export async function generateNewsSection(
+  generalArticles: Article[]
+): Promise<string> {
+  if (!generalArticles?.length) {
+    return "";
+  }
+
+  // Select 6-8 articles for brief updates, ensuring diversity
+  const newsArticles = generalArticles.slice(0, 8);
+
+  const articlesText = newsArticles
+    .map(
+      (article, i) =>
+        `${i + 1}. ${article.title} - ${article.source.name} (${article.url})`
+    )
+    .join("\n");
+
+  const prompt = `Generate a "What else is brewing" news section using these articles:
+
+${articlesText}
 
 Format EXACTLY like this:
-## 🔥 QUICK HITS
+What else is brewing
 
-- **Company** action/announcement with \`number/stat\` — *brief insight or quip*
-- **Another Company** unveils *new thing* — clever observation
+- The NFL and ESPN are said to be on the verge of a multibillion-dollar deal, to be announced next week, that would hand most of the league's media holdings, including RedZone and the NFL Network, over to the Disney-owned sports network in exchange for an equity stake.
+- The nearly 8 million student loan borrowers enrolled in the Biden-era SAVE program, which was struck down by court rulings, will see their bills go up as interest on their loans started accruing again yesterday.
 
 Requirements:
-- Each item is ONE punchy sentence
-- Include specific numbers/stats in \`backticks\` when possible
-- Company names in **bold**
-- Key concepts in *italics*
-- Mix of industries (tech, finance, retail, etc.)
-- Professional but snappy tone`;
+- Each bullet point should be one clear, informative sentence
+- Include specific details, numbers, and context
+- Write in a straightforward news style (less humor than other sections)
+- Cover diverse topics from the provided articles
+- Make each item scannable and easy to digest
+- Include key facts and implications
+- Prioritize different types of news (not just business)
+- Create 5-7 bullet points from the provided articles`;
 
-  return await openai.generateContent(prompt, 350);
+  const content = await ai.generateContent(prompt, 1400);
+  return `##### News
+  
+  ${content}
+  `;
 }
 
 /**
  * Generate Word of the Day section
  */
 export async function generateWordOfDay(): Promise<string> {
-  const prompt = `Generate a "Word of the Day" for a business newsletter.
+  const prompt = `Generate a "Word of the Day".
 
 Format EXACTLY like this:
-## 📚 WORD OF THE DAY
-
 **Term** *(part of speech)*
 
 Clear, simple definition in plain English.
@@ -236,22 +390,24 @@ Clear, simple definition in plain English.
 *Example*: "Relatable example sentence showing the term in use."
 
 Requirements:
-- Pick a relevant, timely business/finance/tech term
+- Pick a random word from the dictionary - it can be anything, but a business/finance/tech term is preferable.
 - Make the definition accessible to non-experts
 - Example should be practical and memorable
 - Keep it concise`;
 
-  const content = await openai.generateContent(prompt, 200);
-  return content + "\n\n*Submitted by a reader*";
+  const content = await ai.generateContent(prompt, 400);
+  return `##### 📚 WORD OF THE DAY
+
+  ${content}`;
 }
 
 /**
  * Generate newsletter footer
  */
 export async function generateFooter(): Promise<string> {
-  const signOff = await openai.generateShortText(
+  const signOff = await ai.generateShortText(
     "Generate a brief, friendly newsletter sign-off. Should feel warm and forward-looking. One short sentence.",
-    20
+    400
   );
 
   return `Written by the Morning Brief team\n\n${signOff}`;
@@ -264,7 +420,6 @@ export async function generateCommunityCorner(): Promise<string> {
   const prompt = `Generate a "Community Corner" section with reader responses about business advice.
 
 Format like this:
-## 💬 COMMUNITY CORNER
 
 **This week's question**: What's the best business advice you've ever received?
 
@@ -280,7 +435,12 @@ Format like this:
 
 Make responses feel authentic and varied.`;
 
-  return await openai.generateContent(prompt, 400);
+  const content = await ai.generateContent(prompt, 800);
+
+  return `##### 💬 COMMUNITY CORNER
+
+    ${content}
+    `;
 }
 
 /**
@@ -290,7 +450,6 @@ export async function generateRecommendations(): Promise<string> {
   const prompt = `Generate a "Recommendations" section for a business newsletter.
 
 Format like this:
-## 👍 RECOMMENDATIONS
 
 Brief intro acknowledging you're an AI but sharing interesting finds.
 
@@ -304,119 +463,334 @@ Brief intro acknowledging you're an AI but sharing interesting finds.
 
 Keep recommendations practical and valuable.`;
 
-  return await openai.generateContent(prompt, 350);
+  const content = await ai.generateContent(prompt, 350);
+
+  return `##### 👍 RECOMMENDATIONS
+  
+  ${content}`;
 }
 
 /**
- * Generate spotlight stock section with AI-generated article
+ * Generate Stat section with data-driven story
+ */
+export async function generateStatSection(
+  marketData: MarketIndicator[],
+  businessArticles: Article[]
+): Promise<string> {
+  // Try to find an interesting stat from articles or create one from market data
+  let statTopic = "market performance";
+  let statValue = "mixed results";
+
+  if (marketData?.length) {
+    const avgChange =
+      marketData.reduce((sum, m) => {
+        const changePercent = typeof m.changePercent === 'string' 
+          ? parseFloat(m.changePercent) 
+          : m.changePercent;
+        return sum + (isNaN(changePercent) ? 0 : changePercent);
+      }, 0) / marketData.length;
+    statValue = `${Math.abs(avgChange).toFixed(1)}%`;
+    statTopic = avgChange > 0 ? "market gains" : "market decline";
+  }
+
+  // Use business articles to create context
+  const articlesContext =
+    businessArticles && businessArticles.length > 0
+      ? businessArticles
+          .slice(0, 2)
+          .filter(article => article && (article.title || article.content || article.description))
+          .map(
+            (article) =>
+              `${article.title || 'Untitled'} - ${(article.content || article.description || "No content available").substring(0, 300)}`
+          )
+          .join("\n")
+      : "No business articles available for context";
+
+  const prompt = `Generate a data-driven "STAT" section.
+
+Context:
+Market data: ${statTopic} showing ${statValue}
+Articles context: ${articlesContext}
+
+Format EXACTLY like this example:
+**Prime number**: A 39% surprise
+
+While most of Switzerland probably went to bed happily breathing in the cool mountain air, lulled to sleep by neighborly yodels, the nation awoke to the unpleasant shock that President Trump had slapped a 39% tariff on the country's imports into the US—one of the highest rates doled out among the dozens the president unveiled Thursday night:
+
+- The rate is even more than the 31% President Trump had initially announced for Swiss goods in April (which was then paused along with other tariffs).
+- The high rate would be a blow to Switzerland's export-driven economy, which notably sends the world pharmaceuticals, watches, jewelry, electronics, and chocolate.
+
+Requirements:
+1. Create a compelling narrative around a specific statistic
+2. Include bullet points with supporting details
+3. Focus on economic/business implications
+4. Make the statistic surprising or noteworthy
+5. Write 1-2 paragraphs plus bullet points`;
+
+  const content = await ai.generateContent(prompt, 2400);
+
+  // Generate a search term for the stat image
+  const unsplashSearchTerm = await ai.generateUnsplashSearchTerm(content);
+
+  // Get a stat-related image
+  const statImage = await unsplashService.getImageForSection(
+    "BUSINESS STATISTICS",
+    unsplashSearchTerm
+  );
+
+  if (statImage) {
+    return `##### STAT
+
+    ![${statImage.alt}](${statImage.url})
+    *[${statImage.credit}](${statImage.link})*
+
+    ${content}`;
+  }
+
+  return content;
+}
+
+/**
+ * Generate Community section
+ */
+export async function generateCommunitySection(): Promise<string> {
+  const prompt = `Generate a "Community Corner" section for a business newsletter.
+
+Format EXACTLY like this:
+
+Last week, we asked, "What is a wildcard summertime food or beverage that defines the season for you?" Here are some of our favorite responses:
+
+"This season is defined by this grilled peach salad with salsa verde, honey, olive oil, salt, and a quality mix of greens topped with blue goat cheese."—Josie from Chicago, IL
+
+"Definitely gazpacho, a cold soup from the south of Spain. Tomatoes, cucumbers, bell peppers, some garlic…It's just SO fresh that nothing compares to it on a hot Andalusian or Catalan beach during the summer."—Julián from Madrid
+
+This week's question
+If you could have a lifetime supply of any product, what would you choose and why?
+
+Requirements:
+- Include realistic reader responses with names and locations
+- Make responses feel authentic and varied
+- Ask an engaging question for next week
+- Keep the tone community-focused and friendly`;
+
+  const content = await ai.generateContent(prompt, 800);
+
+  return `##### COMMUNITY
+
+  ${content}`;
+}
+
+/**
+ * Generate Recommendations section
+ */
+export async function generateRecsSection(): Promise<string> {
+  const prompt = `Generate a "Recommendations" section for a business newsletter.
+
+Format EXACTLY like this:
+Todays to-do list:
+
+ **Treat**: Having a furry friend doesn't mean your kitchen needs to be cluttered.
+
+ **Spot the fakes**: Test your ability to tell AI-generated images from genuine ones in this study from Northwestern University.
+
+ **Read, then drive**: The ultimate road trip books (besides On the Road).
+
+ **Watch**: A new wrinkle in the "Are birds real?" debate.
+
+Requirements:
+- Include different categories: Treat, Read, Watch, etc.
+- Keep recommendations practical and valuable
+- Write brief, engaging descriptions
+- Focus on business/productivity/lifestyle content
+- Include a variety of content types`;
+
+  const content = await ai.generateContent(prompt, 350);
+
+  return `##### RECS
+
+  ${content}`;
+}
+
+/**
+ * Generate Games section
+ */
+export async function generateGamesSection(): Promise<string> {
+  const locations = [
+    "New York, NY",
+    "Los Angeles, CA",
+    "Miami, FL",
+    "Austin, TX",
+    "Seattle, WA",
+    "Chicago, IL",
+    "Boston, MA",
+    "San Francisco, CA",
+    "Denver, CO",
+    "Nashville, TN",
+  ];
+
+  const randomLocation =
+    locations[Math.floor(Math.random() * locations.length)];
+  const randomPrice = Math.floor(Math.random() * 10) * 500000 + 1000000; // $1M-$6M range
+  const formatPrice = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(randomPrice);
+
+  const prompt = `Generate a real estate guessing game section called "Open House".
+
+Location: ${randomLocation}
+Price: ${formatPrice}
+
+Format EXACTLY like this:
+Games available
+
+**Crossword**: Jack has dreamed up an extra fun puzzle for you and your co-players. Check it out here.
+
+**Open House**
+Welcome to Open House, the only newsletter section that is anticipating a hot new bombshell entering the villa at any moment. We'll give you a few facts about a listing and you try to guess the price.
+
+Today's home might be in ${randomLocation}, but it gives off a Love Island vibe. The listing claims the property boasts 2020's "Best Pool in America." We couldn't verify that, but it does appear to be pretty cool. Amenities include:
+
+- 5 beds, 6 baths
+- Four outdoor fire pits
+- Plenty of vibrantly colored chairs placed far from the action to sit and watch your friends having fun
+
+How much for your own little oasis?
+
+**Answer**: ${formatPrice}
+
+Requirements:
+- Create realistic but interesting property details
+- Use humor and personality in the description
+- Include specific amenities that sound appealing
+- Keep the tone playful and engaging`;
+
+  const content = await ai.generateContent(prompt, 400);
+
+  return `##### PLAY
+
+  ${content}`;
+}
+
+/**
+ * Generate Stock Spotlight section from articles about the spotlight stock
  */
 export async function generateStockSpotlight(
-  spotlightData: any
+  spotlightStock: any,
+  stockArticles: any[]
 ): Promise<string> {
-  if (!spotlightData?.spotlightStock) return "";
+  if (!spotlightStock || !stockArticles?.length) {
+    return "";
+  }
 
-  const stock = spotlightData.spotlightStock;
-  const articles = spotlightData.spotlightStockArticles?.results || [];
+  // Format the stock information
+  const stockName = spotlightStock.name || spotlightStock.symbol;
+  const stockSymbol = spotlightStock.symbol;
+  const stockPrice = spotlightStock.price;
+  const changePercent = spotlightStock.changesPercentage;
+  const isPositive = changePercent > 0;
+  const changeDirection = isPositive ? "gained" : "lost";
+  const changeSign = isPositive ? "+" : "";
 
-  // Prepare article summaries for AI
-  const articleSummaries = articles
+  // Format articles for AI processing
+  const articlesText = stockArticles
     .slice(0, 3)
     .map(
-      (article: any, i: number) =>
+      (article, i) =>
         `Article ${i + 1}:
-Title: ${article.title}
-Publisher: ${article.publisher?.name || "Unknown"}
-Content: ${(article.content || "").substring(0, 800)}...`
+        Title: ${article.title}
+        Publisher: ${article.publisher?.name || article.publisher}
+        Content: ${(article.content || article.description || "").substring(0, 800)}...
+        URL: ${article.article_url}`
     )
     .join("\n\n");
 
-  const prompt = `Write a compelling newsletter section about ${stock.name} (${stock.symbol}), which ${stock.changesPercentage > 0 ? "surged" : "dropped"} ${Math.abs(stock.changesPercentage).toFixed(1)}% today.
+  const spotlightContent = await ai.generateContent(
+    `Create an article about ${stockName} (${stockSymbol}), which has ${stockPrice} & ${changeDirection} ${changeSign}${Math.abs(changePercent).toFixed(2)}% today.
 
-Stock Details:
-- Current Price: $${stock.price}
-- Change: ${stock.changesPercentage > 0 ? "+" : ""}${stock.changesPercentage.toFixed(2)}%
-- Market Cap: $${stock.marketCap ? (stock.marketCap / 1e9).toFixed(1) + "B" : "N/A"}
+      Use these recent articles about the company:
 
-${articleSummaries ? `Recent News Coverage:\n${articleSummaries}` : "No recent news available."}
+      ${articlesText}
 
-Requirements:
-1. Start with "#### ${stock.name} (${stock.symbol})"
-2. Open with an attention-grabbing sentence about the price movement
-3. Synthesize information from the articles to explain WHY this movement happened
-4. Include specific details, numbers, and context
-5. Add analysis of what this means for investors
-6. End with forward-looking perspective
-7. 3-4 paragraphs total
-8. Professional yet engaging tone
-9. Use **bold** for the company name on first mention and key figures`;
-
-  // Generate AI-powered search terms for the spotlight stock image
-  const imageSearchPrompt = `Generate a specific, visual search term for finding a professional stock photo related to ${stock.name} (${stock.symbol}).
-
-Context: ${stock.name} ${stock.changesPercentage > 0 ? "surged" : "dropped"} ${Math.abs(stock.changesPercentage).toFixed(1)}% today.
-
-Requirements:
-- Focus on concrete visual elements (office buildings, industry, products, etc.)
-- Avoid abstract concepts
-- Make it suitable for professional newsletter images
-- One specific search term only
-
-Example outputs:
-"tech company headquarters"
-"financial trading floor"
-"pharmaceutical research laboratory"
-"automotive manufacturing plant"`;
-
-  const [content, imageSearchTerm] = await Promise.all([
-    openai.generateContent(prompt, 800),
-    openai.generateShortText(imageSearchPrompt, 30),
-  ]);
-
-  // Fetch spotlight image using AI-generated search term
-  const spotlightImage = await unsplashService.getImageForSection(
-    "STOCK SPOTLIGHT",
-    imageSearchTerm
+      Requirements:
+      1. Within the article you are to give an overview of the company and the industry, analyze and explain why the stock moved based on the article content - identify industry trends, and explain the business context and what this means for investors.
+      4. Include details from the articles about company or industry.
+      5. Make it accessible to both novice and experienced investors.
+      6. Use 2-3 paragraphs.
+      7. Include the original article URL.
+      `,
+    2400
   );
 
-  // Add image to content if available
-  let finalContent = `## SPOTLIGHT\n\n`;
+  // Generate a search term for the stock image
+  const unsplashSearchTerm =
+    await ai.generateUnsplashSearchTerm(spotlightContent);
 
-  if (spotlightImage) {
-    finalContent += `![${spotlightImage.alt}](${spotlightImage.url})\n*${spotlightImage.credit} - [View original](${spotlightImage.link})*\n\n`;
+  // Get a stock-related image
+  const stockImage = await unsplashService.getImageForSection(
+    "STOCK SPOTLIGHT",
+    unsplashSearchTerm
+  );
+
+  if (stockImage) {
+    return `##### STOCK SPOTLIGHT
+
+## ${stockName}
+
+![${stockImage.alt}](${stockImage.url})
+*[${stockImage.credit}](${stockImage.link})*
+
+${spotlightContent}`;
   }
 
-  finalContent += content;
-
-  return finalContent;
+  return `${spotlightContent}`;
 }
 
 /**
- * Compile all sections into complete newsletter
+ * Generate Share the Brew section
+ */
+export async function generateShareSection(): Promise<string> {
+  return `##### SHARE THE BREW
+
+          Share Morning Brief with your friends, acquire free Brew swag, and then acquire more friends as a result of your fresh Brew swag.
+
+          We're saying we'll give you free stuff and more friends if you share a link. One link.
+
+          Your referral count: 0
+
+          [Click to Share](#)
+
+          Or copy & paste your referral link to others:
+          morningbrief.com/daily/r/?kid=abc123`;
+}
+
+/**
+ * Compile all sections into complete newsletter (legacy version)
  */
 export async function compileAllSections(
   articles: Article[],
-  marketData: MarketIndicator[],
-  spotlightStock?: any
+  marketData: MarketIndicator[]
 ): Promise<NewsletterSections> {
-  console.log("📝 Generating newsletter sections...");
+  console.log("📝 Generating newsletter sections (legacy)...");
 
   // Generate all sections in parallel for efficiency
   const [
     header,
-    mainNews,
+    economySection,
     marketSnapshot,
-    stockSpotlight,
+    stat,
     icymi,
-    quickHits,
+    news,
     wordOfDay,
     footer,
   ] = await Promise.all([
-    generateHeader(),
-    generateMainNews(articles),
+    generateHeader(articles),
+    generateEconomySection(articles), // Use all articles as business articles
     generateMarketSnapshot(marketData),
-    generateStockSpotlight(spotlightStock),
-    generateICYMI(),
-    generateQuickHits(),
+    generateStatSection(marketData, articles),
+    generateICYMI(articles),
+    generateNewsSection(articles),
     generateWordOfDay(),
     generateFooter(),
   ]);
@@ -424,11 +798,157 @@ export async function compileAllSections(
   return {
     header,
     intro: "", // Intro is part of header now
-    mainNews,
+    marketSnapshot,
+    economy: economySection,
+    world: "", // Not available in legacy mode
+    retail: "", // Not available in legacy mode
+    icymi,
+    stat,
+    news,
+    community: "", // Not available in legacy mode
+    recs: "", // Not available in legacy mode
+    games: "", // Not available in legacy mode
+    shareTheBrew: "", // Not available in legacy mode
+    wordOfDay,
+    footer,
+  };
+}
+
+/**
+ * Distribute articles to prevent duplication across sections
+ */
+function distributeArticles(categorizedArticles: CategorizedArticles) {
+  // Create a used articles tracker
+  const usedArticles = new Set<string>();
+
+  // Helper function to get unused articles from a category
+  const getUnusedArticles = (articles: Article[], count: number): Article[] => {
+    const unused = articles.filter((article) => !usedArticles.has(article.url));
+    const selected = unused.slice(0, count);
+    selected.forEach((article) => usedArticles.add(article.url));
+    return selected;
+  };
+
+  return {
+    // Header gets first business article
+    headerArticles: getUnusedArticles(categorizedArticles.business, 3),
+
+    // Economy section gets next business articles
+    economyArticles: getUnusedArticles(categorizedArticles.business, 2),
+
+    // World section gets world articles
+    worldArticles: categorizedArticles.world,
+
+    // Retail section gets tech + entertainment
+    technologyArticles: categorizedArticles.technology,
+    entertainmentArticles: categorizedArticles.entertainment,
+
+    // Stat section gets remaining business articles
+    statBusinessArticles: getUnusedArticles(categorizedArticles.business, 3),
+
+    // ICYMI gets first half of general articles
+    icymiArticles: getUnusedArticles(
+      categorizedArticles.general,
+      Math.floor(categorizedArticles.general.length / 2)
+    ),
+
+    // News section gets second half of general articles
+    newsArticles: getUnusedArticles(
+      categorizedArticles.general,
+      categorizedArticles.general.length
+    ),
+
+    // Add science and health to general pool for variety
+    additionalGeneralArticles: [
+      ...categorizedArticles.science,
+      ...categorizedArticles.health,
+    ],
+  };
+}
+
+/**
+ * Compile all sections into complete newsletter using categorized articles
+ */
+export async function compileAllCategorizedSections(
+  categorizedArticles: CategorizedArticles,
+  marketData: MarketIndicator[],
+  spotlightStock?: any
+): Promise<NewsletterSections> {
+  console.log("📝 Generating categorized newsletter sections...");
+
+  // Distribute articles to prevent duplication
+  const distributedArticles = distributeArticles(categorizedArticles);
+
+  console.log("📊 Article distribution:", {
+    header: distributedArticles.headerArticles.length,
+    economy: distributedArticles.economyArticles.length,
+    world: distributedArticles.worldArticles.length,
+    technology: distributedArticles.technologyArticles.length,
+    entertainment: distributedArticles.entertainmentArticles.length,
+    stat: distributedArticles.statBusinessArticles.length,
+    icymi: distributedArticles.icymiArticles.length,
+    news: distributedArticles.newsArticles.length,
+  });
+
+  // Generate all sections in parallel for maximum efficiency
+  const [
+    header,
+    economySection,
+    worldSection,
+    retailSection,
     marketSnapshot,
     stockSpotlight,
+    stat,
     icymi,
-    quickHits,
+    news,
+    community,
+    recs,
+    games,
+    shareTheBrew,
+    wordOfDay,
+    footer,
+  ] = await Promise.all([
+    generateHeader(distributedArticles.headerArticles),
+    generateEconomySection(distributedArticles.economyArticles),
+    generateWorldSection(distributedArticles.worldArticles),
+    generateRetailSection(
+      distributedArticles.technologyArticles,
+      distributedArticles.entertainmentArticles
+    ),
+    generateMarketSnapshot(marketData, spotlightStock),
+    generateStockSpotlight(
+      spotlightStock?.spotlightStock,
+      spotlightStock?.spotlightStockArticles?.results || []
+    ),
+    generateStatSection(marketData, distributedArticles.statBusinessArticles),
+    generateICYMI([
+      ...distributedArticles.icymiArticles,
+      ...distributedArticles.additionalGeneralArticles,
+    ]),
+    generateNewsSection(distributedArticles.newsArticles),
+    generateCommunitySection(),
+    generateRecsSection(),
+    generateGamesSection(),
+    generateShareSection(),
+    generateWordOfDay(),
+    generateFooter(),
+  ]);
+
+  return {
+    header,
+    intro: "", // Intro is part of header now
+    marketSnapshot,
+    stockSpotlight,
+    economy: economySection,
+    world: worldSection,
+    retail: retailSection,
+    icymi,
+    stat,
+    news,
+    community,
+    recs,
+    games,
+    shareTheBrew,
     wordOfDay,
     footer,
   };
