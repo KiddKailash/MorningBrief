@@ -6,13 +6,8 @@
 
 import nodemailer from 'nodemailer';
 import { settings } from '../config/settings';
-
-interface EmailOptions {
-  subject: string;
-  recipients: string[];
-  html: string;
-  plainText: string;
-}
+import { EmailOptions } from '../types'
+import { brand } from '../config/brand';
 
 class EmailService {
   private transporter: nodemailer.Transporter;
@@ -37,7 +32,7 @@ class EmailService {
     for (const recipient of recipients) {
       try {
         await this.transporter.sendMail({
-          from: `${process.env['NEWSLETTER_NAME'] || 'Newsletter'} <${settings.email.address}>`,
+          from: `${brand.name} <${settings.email.address}>`,
           to: recipient,
           subject,
           text: plainText,
