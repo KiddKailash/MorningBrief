@@ -17,8 +17,8 @@ async function main() {
     
     switch (command) {
       case 'preview':
-        // Generate preview without sending
-        const previewPath = await newsletter.preview();
+        // Generate categorized preview with stock spotlight (same as start/send)
+        const previewPath = await newsletter.previewCategorized();
         console.log(`\n📄 Preview saved to: ${previewPath}`);
         console.log('Open this file in your browser to view the newsletter.\n');
         break;
@@ -26,14 +26,14 @@ async function main() {
       case 'test':
         // Send test email to yourself
         console.log('📧 Sending test email...');
-        const sections = await newsletter.getEditableSections();
+        const sections = await newsletter.getCategorizedEditableSections();
         console.log('\nGenerated sections:', Object.keys(sections));
         break;
         
       case 'send':
       default:
-        // Send newsletter to all subscribers
-        await newsletter.send();
+        // Send newsletter to all subscribers using categorized approach
+        await newsletter.sendCategorized();
         console.log('\n🎉 Newsletter sent successfully!\n');
         break;
     }
