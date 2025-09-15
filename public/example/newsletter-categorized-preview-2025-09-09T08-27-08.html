@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Morning Brief - Tuesday, 9/9/2025</title>
+  <style>
+    * {
+      font-size: 18px;
+    }
+
+    ul {
+      list-style-type: disc;
+      padding-left: 10px;
+      margin: 4px 0;
+    }
+
+    /* Reset styles */
+    body, table, td, p, a, li, blockquote {
+      -webkit-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
+    }
+
+    a {
+      color: rgba(0, 0, 0, 0.87);
+      text-decoration: underline;
+    }
+    
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0 !important;
+      padding: 0 !important;
+      background-color: #fafafa;
+      line-height: 1.5;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 2px;
+    }
+
+    h2 {
+      margin-bottom: 0px;
+    }
+
+    /* CLASSES */ 
+
+    /* Main container - email compatible */
+    .newsletter-container {
+      max-width: 670px;
+      margin: 20px auto;
+      width: 100%;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    /* Section Container - email compatible */
+    .section-container {
+      max-width: 100%;
+      padding: 20px;
+      border: 1px solid #eeeeee;
+      background-color: #ffffff;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      box-sizing: border-box;
+    }
+
+    /* HEADERS AND TITLES */
+    /* Newsletter Brand name */
+    .newsletter-title {
+      font-size: 48px;
+      font-weight: bold;
+      margin: 0;
+      color: #ffffff;
+    }
+
+    /* Section Headers */
+    .section-header {
+      text-transform: uppercase;
+      font-weight: bold;
+      color: #1976d2;
+      margin-top: 0;
+      margin-bottom: 5px;
+    }
+
+    .advertiser-mention {
+      text-align: center;
+      padding: 10px;
+      color: rgba(0, 0, 0, 0.6)
+    }
+    
+    /* Header */
+    .newsletter-header {
+      background: #1976d2;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      color: #ffffff;
+    }
+    
+    /* Markets table styling */
+    .markets-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #ffffff;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .markets-table td {
+      border-bottom: 1px solid #eeeeee;
+    }
+
+    .markets-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .price-positive {
+      color: #0b8a3e;
+      font-weight: bold;
+    }
+
+    .price-positive-text {
+      background-color: #e6f4ea;
+      color: #0b8a3e;
+      font-weight: bold;
+      padding: 8px;
+      border-radius: 8px;
+    }
+
+    .price-negative {
+      color: #c0392b;
+      font-weight: bold;
+    }
+
+    .price-negative-text {
+      background-color: #fdecea;
+      color: #c0392b;
+      font-weight: bold;
+      padding: 8px;
+      border-radius: 8px;
+    }
+      
+    .price-neutral {
+      color: #555555;
+      font-weight: bold;
+    }
+
+    .price-neutral-text {
+      background-color: #f3f3f3;
+      color: #555555;
+      font-weight: bold;
+      padding: 8px;
+      border-radius: 8px;
+    }
+
+    .quick-bytes {
+      border-radius: 8px;
+      padding: 25px;
+    }
+
+    .community-section {
+      border-radius: 8px;
+      padding: 25px;
+    }
+
+    .recommendations-section {
+      border-radius: 8px;
+      padding: 25px;
+    }
+
+    .referral-cta {
+      background: linear-gradient(135deg, #1976d2 0%, #9c27b0 100%);
+      color: #ffffff;
+      border-radius: 8px;
+      text-align: center;
+      padding: 25px;
+    }
+
+    .referral-cta .section-header {
+      color: #ffffff;
+    }
+
+    .referral-cta .article-content {
+      color: #ffffff;
+    }
+    
+    /* Article styling */
+    .article {
+      border-bottom: 1px solid #f5f5f5;
+      padding-bottom: 20px;
+    }
+    
+    .article:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+    
+    .article-content {
+      color: rgba(0, 0, 0, 0.87);
+    }
+    
+    /* Image styling */
+    .image-container {
+      position: relative;
+      text-align: center;
+    }
+    
+    .section-image {
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      transition: transform 0.2s ease;
+    }
+    
+    /* Footer */
+    .newsletter-footer {
+      background-color: #fafafa;
+      padding: 30px 40px;
+      text-align: center;
+      border-top: 1px solid #eeeeee;
+    }
+    
+    .footer-text {
+      color: rgba(0, 0, 0, 0.38);
+      margin: 0;
+    }
+    
+    /* Nav bar - email compatible table layout */
+    .nav-bar {
+      width: 100%;
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.87);
+      box-sizing: border-box;
+      margin-bottom: 10px;
+    }
+    
+    /* Mobile responsiveness */
+    @media only screen and (max-width: 600px) {
+      .newsletter-header,
+      .newsletter-footer {
+        padding: 20px !important;
+      }
+      
+      .newsletter-title {
+        font-size: 28px !important;
+      }
+      
+      .section-container {
+        padding: 15px !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  
+  <div style="background: #1f2937; color: white; padding: 15px; text-align: center; font-family: monospace; position: sticky; top: 0; z-index: 1000; border-bottom: 3px solid #10b981;">
+    <h2 style="margin: 0; color: #10b981;">📧 Newsletter Preview</h2>
+    <p style="margin: 5px 0 0 0; opacity: 0.8;">Generated: 9/9/2025, 6:27:08 PM</p>
+    <div style="margin-top: 10px;">
+      <button onclick="window.print()" style="background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 4px; margin: 0 5px; cursor: pointer;">Print Preview</button>
+      <button onclick="document.querySelector('.newsletter-container').style.maxWidth = document.querySelector('.newsletter-container').style.maxWidth === '100%' ? '670px' : '100%'" style="background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 4px; margin: 0 5px; cursor: pointer;">Toggle Width</button>
+    </div>
+  </div>
+  
+  <div class="newsletter-container">
+
+    <!-- Top navigation bar - email compatible table -->
+    <table class="nav-bar" cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin-bottom: 10px;">
+      <tr>
+        <td style="text-align: left; color: rgba(0, 0, 0, 0.6); font-size: 12px;">
+          Tuesday, 9/9/2025
+        </td>
+        <td style="text-align: right;">
+          <a href="#" target="_blank" style="color: rgba(0, 0, 0, 0.6); text-decoration: underline; font-size: 12px;">Share with a Friend</a>
+        </td>
+      </tr>
+    </table>
+
+    <div class="section-container">
+      <!-- Header -->
+      <div class="newsletter-header">
+        <h1 class="newsletter-title">Morning Brief</h1>
+      </div>
+      <div class="advertiser-mention">
+        <p>Presented by <strong>Business Insider</strong></p>
+      </div>
+      <!-- Intro Hook -->
+      <div>
+        <p style="margin: 5px 0;">Good Morning!</p>
+
+<p style="margin: 5px 0;">In case you missed it, the former head of security for WhatsApp is throwing some serious shade at Meta, likening its culture to a “cult” in a recent lawsuit. Apparently, while Meta has been busy drumming up ads proclaiming the privacy of WhatsApp—because nothing says “trust us” like a sitcom cast—its internal practices have allegedly prioritized user growth over, you know, actual security. Who knew that a company with 3 billion users could have such a <em>cult-like</em> vibe? For the full scoop on this wild ride, check out the details of the lawsuit <a href="https://arstechnica.com/security/2025/09/former-whatsapp-security-boss-sues-meta-for-systemic-cybersecurity-failures/" target="_blank" style="color: rgba(0, 0, 0, 0.87); text-decoration: underline;">here</a>.</p>
+
+<p style="margin: 5px 0;">Stay tuned for more business shenanigans!</p>
+      </div>
+    </div>
+    
+    <!-- Content -->
+    
+    <div class="section-container">
+      
+    <h2 class="section-header">MARKETS</h2>
+    <table class="markets-table" style="width: 100%; border-collapse: collapse;">
+      <tbody><tr>
+        <td style="padding: 8px 12px; text-align: center;" class="price-positive">▲</td> 
+        <td style="padding: 8px 12px;"><strong>S&P 500</strong></td>
+        <td style="padding: 8px 12px; text-align: right;">$648.83</td>
+        <td style="padding: 8px 12px; text-align: right;">
+          <span class="price-positive-text">+0.25%</span>
+        </td>
+      </tr><tr>
+        <td style="padding: 8px 12px; text-align: center;" class="price-positive">▲</td> 
+        <td style="padding: 8px 12px;"><strong>Dow Jones</strong></td>
+        <td style="padding: 8px 12px; text-align: right;">$456.2</td>
+        <td style="padding: 8px 12px; text-align: right;">
+          <span class="price-positive-text">+0.27%</span>
+        </td>
+      </tr><tr>
+        <td style="padding: 8px 12px; text-align: center;" class="price-positive">▲</td> 
+        <td style="padding: 8px 12px;"><strong>NASDAQ</strong></td>
+        <td style="padding: 8px 12px; text-align: right;">$578.87</td>
+        <td style="padding: 8px 12px; text-align: right;">
+          <span class="price-positive-text">+0.49%</span>
+        </td>
+      </tr><tr>
+        <td style="padding: 8px 12px; text-align: center;" class="price-positive">▲</td> 
+        <td style="padding: 8px 12px;"><strong>Gold</strong></td>
+        <td style="padding: 8px 12px; text-align: right;">$334.82</td>
+        <td style="padding: 8px 12px; text-align: right;">
+          <span class="price-positive-text">+1.14%</span>
+        </td>
+      </tr><tr>
+        <td style="padding: 8px 12px; text-align: center;" class="price-negative">▼</td> 
+        <td style="padding: 8px 12px;"><strong>Bitcoin</strong></td>
+        <td style="padding: 8px 12px; text-align: right;">$111633.27</td>
+        <td style="padding: 8px 12px; text-align: right;">
+          <span class="price-negative-text">-0.39%</span>
+        </td>
+      </tr><tr>
+        <td style="padding: 8px 12px; text-align: center;" class="price-negative">▼</td> 
+        <td style="padding: 8px 12px;"><strong>10-Year Treasury Yield</strong></td>
+        <td style="padding: 8px 12px; text-align: right;">$4.1</td>
+        <td style="padding: 8px 12px; text-align: right;">
+          <span class="price-negative-text">-1.68%</span>
+        </td>
+      </tr><tr>
+        <td style="padding: 8px 12px; text-align: center;" class="price-negative">▼</td> 
+        <td style="padding: 8px 12px;"><strong>NFE</strong></td>
+        <td style="padding: 8px 12px; text-align: right;">$1.4</td>
+        <td style="padding: 8px 12px; text-align: right;">
+          <span class="price-negative-text">-42.86%</span>
+        </td>
+      </tr></tbody>
+    </table>  
+    </div>
+    
+    
+    <!-- Stock Spotlight Section -->
+    
+    <div class="section-container">
+      <h2 class="section-header">STOCK SPOTLIGHT</h2>
+
+<h2>New Fortress Energy Inc.</h2>
+
+<div class="image-container"><img src="https://images.unsplash.com/photo-1692982308601-0c5f6009bd62?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3ODE2MjR8MHwxfHNlYXJjaHw0fHxlbmVyZ3klMjB2b2xhdGlsaXR5JTIwaW52ZXN0bWVudCUyMHRyZW5kcyUyMCUyMCUwQW5hdHVyYWwlMjBnYXMlMjBpbmZyYXN0cnVjdHVyZSUyMCUyMCUwQXN0b2NrJTIwbWFya2V0JTIwZmx1Y3R1YXRpb25zJTIwJTIwJTBBUHVlcnRvJTIwUmljbyUyMGZpbmFuY2UlMjAlMjAlMEFnbG9iYWwlMjBlbmVyZ3klMjBhY2Nlc3MlMjAlMjB8ZW58MXwwfHx8MTc1NzQwNjQyM3ww&ixlib=rb-4.1.0&q=80&w=1080" alt="a doorway with a clock on the top of it" class="section-image"/></div>
+<em><a href="https://unsplash.com/photos/a-doorway-with-a-clock-on-the-top-of-it-dfaWn8b7qIc" target="_blank" style="color: rgba(0, 0, 0, 0.87); text-decoration: underline;">Photo by Florian K.</a></em>
+
+<p style="margin: 5px 0;"><strong>New Fortress Energy Inc. (NFE): A Rollercoaster Ride of Gains and Losses</strong></p>
+
+<p style="margin: 5px 0;">New Fortress Energy Inc. is not your average energy company. Specializing in natural gas infrastructure, NFE is on a mission to transform energy access across the globe, particularly in the Caribbean and Latin America. However, today, investors are experiencing a <em>not-so-fun</em> rollercoaster ride as the stock plummeted by a staggering <strong>42.86%</strong>. This drop follows a brief spike in share prices, proving that in the world of energy, volatility is the name of the game.</p>
+
+<p style="margin: 5px 0;">So, what caused this dramatic shift? Well, it appears that yesterday’s gains were fueled by the Trump administration's decision to fire five out of seven members of a federal oversight board responsible for Puerto Rico's finances. Investors took this news as a sign to cash in on their profits, leading to a sell-off today. As of 3:40 p.m. ET, NFE shares were down <strong>9.2%</strong> and facing significant downward pressure. This situation highlights the unpredictable nature of the energy sector, where political moves can have immediate and profound impacts on stock prices, especially for companies like New Fortress that are heavily involved in regions with complex financial landscapes. For those keeping tabs on industry trends, it’s a reminder that energy stocks can be as volatile as the energy they produce, making it essential for investors to stay informed and ready for anything.</p>
+
+<p style="margin: 5px 0;">For a deeper dive into the situation, you can check out the full details in this article: <a href="https://www.fool.com/investing/2025/08/06/why-new-fortress-energy-stock-is-plummeting-today/?source=iedfolrf0000001" target="_blank" style="color: rgba(0, 0, 0, 0.87); text-decoration: underline;">Why New Fortress Energy Stock Is Plummeting Today</a>.</p>
+    </div>
+    
+    
+    <!-- Economy Section -->
+    
+    <div class="section-container">
+      <h2 class="section-header">ECONOMY</h2>
+
+<div class="image-container"><img src="https://images.unsplash.com/photo-1528747008803-f9f5cc8f1a64?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3ODE2MjR8MHwxfHNlYXJjaHwzfHxBSSUyMGNvcHlyaWdodCUyMHNldHRsZW1lbnQlMjAlMjAlMEFmZWRlcmFsJTIwanVkZ2UlMjBydWxpbmclMjAlMjAlMEFjbGFzcyUyMGFjdGlvbiUyMGxhd3N1aXQlMjAlMjAlMEFpbnRlbGxlY3R1YWwlMjBwcm9wZXJ0eSUyMGxhdyUyMCUyMCUwQWxlZ2FsJTIwcHJvY2VlZGluZ3MlMjBuZXdzfGVufDF8MHx8fDE3NTc0MDY0Mjh8MA&ixlib=rb-4.1.0&q=80&w=1080" alt="brown wooden scrable" class="section-image"/></div>
+<em><a href="https://unsplash.com/photos/brown-wooden-scrable-xcVW_sFp4jQ" target="_blank" style="color: rgba(0, 0, 0, 0.87); text-decoration: underline;">Photo by Melinda Gimpel</a></em>
+
+<h3>Judge Hits Pause on Anthropic's $1.5 Billion Copyright Settlement</h3>
+
+<p style="margin: 5px 0;">In a courtroom drama that rivals any legal thriller, a federal judge has <strong>rejected</strong> Anthropic PBC's proposed $1.5 billion copyright settlement, raising eyebrows and concerns about the deal's integrity. Judge William Alsup, who oversees the case, expressed his <em>unease</em> over potential behind-the-scenes negotiations that could be forcing authors to accept a deal they might not fully understand. It’s like someone trying to shove a kale smoothie down your throat while insisting it’s delicious.</p>
+
+<h3>The Details: What’s at Stake?</h3>
+
+<p style="margin: 5px 0;">During the initial hearing since the deal was announced on September 5, Judge Alsup voiced that he feels “misled” and needs more clarity on how claims will be processed for authors involved. He pointed out that the agreement is “nowhere close to complete,” which is quite the understatement when you consider the whopping $1.5 billion on the table. This isn’t just Monopoly money; it’s real cash that could change the lives of many authors, assuming they can actually access it.</p>
+
+<p style="margin: 5px 0;">Attorneys for the authors, like Justin Nelson from Susman Godfrey LLP, have assured the court that they’re committed to ensuring every valid claim is compensated. But with Judge Alsup's concerns lingering, it feels like watching a high-stakes poker game where nobody's really sure what cards everyone is holding. You can read more about this unfolding saga in a detailed report <a href="https://news.bloomberglaw.com/ip-law/anthropic-judge-blasts-copyright-pact-as-nowhere-close-to-done" target="_blank" style="color: rgba(0, 0, 0, 0.87); text-decoration: underline;">here</a>.</p>
+
+<h3>What This Means for Authors and the Industry</h3>
+
+<p style="margin: 5px 0;">For authors, this ruling is a double-edged sword. On one hand, they could benefit from a substantial payout; on the other, they might find themselves grappling with a settlement that lacks clarity and fairness. The judge's insistence on thorough scrutiny signals a cautious approach to copyright settlements in an era where AI and creative rights are colliding like two cars at a busy intersection.</p>
+
+<p style="margin: 5px 0;">As we watch this legal saga unfold, the implications for the broader creative industry could be profound. If this settlement is ultimately rejected or altered, it may set a precedent for how AI companies negotiate with creators. So, keep your eyes peeled—this could be the start of a much larger conversation about the value of creative work in the digital age.</p>
+    </div>
+    
+    
+    <!-- World Section -->
+    
+    <div class="section-container">
+      <h2 class="section-header">WORLD</h2>
+
+<h3>🌍 Tour de Headlines</h3>
+
+<ul style="margin: 5px 0; padding-left: 10px; list-style-type: disc;"><li><strong>💣 Ukrainian drones strike fuel pumping station supplying diesel to Moscow.</strong> In a bold move, Ukrainian drones targeted a fuel pumping station in Russia's Vladimir Oblast, causing some <em>serious</em> fuel shortages in the capital. Commander Robert "Madyar" Brovdi cheekily remarked on Telegram that gasoline is becoming "a scarce liquid," while gas and oil are now <em>fast-burning</em> commodities. You can catch the full details in this <a href="https://kyivindependent.com/ukrainian-drones-strike-oil-pumping-station-supplying-fuel-for-moscow-military-says/" target="_blank" style="color: rgba(0, 0, 0, 0.87); text-decoration: underline;">developing story</a>.</li>
+
+<p style="margin: 5px 0;"><li><strong>🖌️ Banksy mural of judge beating protester to be removed.</strong> Just when you thought street art couldn’t get more controversial, Banksy has unveiled a new mural depicting a judge <em>wielding</em> a gavel against a protester. The piece, which critiques the U.K. government's crackdown on Palestine Action, was promptly covered by security officials, proving that even art can be a target. Dive into the details of this artistic scandal <a href="https://www.cbsnews.com/news/banksy-new-mural-london-royal-courts-judge-beating-protester/" target="_blank" style="color: rgba(0, 0, 0, 0.87); text-decoration: underline;">here</a>.</li></p>
+
+<p style="margin: 5px 0;"><li><strong>⚖️ Banksy’s mural criticizes Palestine Action crackdown.</strong> In a striking commentary on civil rights, Banksy's latest work at the High Court shows a bewigged judge striking a protester, symbolizing the government's heavy-handed approach to dissent. This mural emerged just days after nearly 900 demonstrators were detained, showcasing the increasingly tense relationship between art and activism in the U.K. For more on this audacious artwork, check out the full story <a href="https://www.aljazeera.com/news/2025/9/8/banksy-mural-shows-judge-beating-protester-amid-palestine-action-crackdown" target="_blank" style="color: rgba(0, 0, 0, 0.87); text-decoration: underline;">here</a>.</li></ul></p>
+    </div>
+    
+    
+    <!-- Retail Section -->
+    
+    <div class="section-container">
+      <h2 class="section-header">Retail</h2>
+
+<div class="image-container"><img src="https://images.unsplash.com/photo-1716436329475-4c55d05383bb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3ODE2MjR8MHwxfHNlYXJjaHw1fHxBTUQlMjBncmFwaGljcyUyMGRyaXZlciUyMCUyMCUwQWdhbWluZyUyMHRlY2hub2xvZ3klMjAlMjAlMEFGaWRlbGl0eUZYJTIwU3VwZXIlMjBSZXNvbHV0aW9uJTIwJTIwJTBBZ2FtZSUyMHZpc3VhbCUyMHF1YWxpdHklMjAlMjAlMEFGU1IlMjA0JTIwc3VwcG9ydHxlbnwxfDB8fHwxNzU3NDA2NDI0fDA&ixlib=rb-4.1.0&q=80&w=1080" alt="a computer processor with the letter a on top of it" class="section-image"/></div>
+    <em><a href="https://unsplash.com/photos/a-computer-processor-with-the-letter-a-on-top-of-it-5b9Lr-ggr0E" target="_blank" style="color: rgba(0, 0, 0, 0.87); text-decoration: underline;">Photo by BoliviaInteligente</a></em>
+
+<p style="margin: 5px 0;">### AMD's Latest Driver: A Game-Changer for Gamers</p>
+
+<p style="margin: 5px 0;">In a move that has gamers collectively fist-pumping in their basements, AMD has unveiled its latest Software Adrenalin Edition 25.9.1, which now enables <strong>FSR 4</strong> support for over 85 games that previously used FSR 3.1. For those not in the know, FSR (FidelityFX Super Resolution) is AMD's answer to making your games look better without the need for a second mortgage on your graphics card. With this update, titles like <em>Borderlands 4</em> and <em>Hell Is Us</em> can now bask in the glow of improved visual quality, all thanks to a simple driver update. So, if you thought your graphics were already stunning, think again—AMD just cranked the dial to eleven.</p>
+
+<h3>Market Impact and Consumer Behavior</h3>
+
+<p style="margin: 5px 0;">This strategic move isn't just about making games prettier; it’s a calculated play by AMD to keep pace with NVIDIA's DLSS technology. By expanding FSR 4's compatibility, AMD is not only enhancing the gaming experience but also appealing to savvy consumers who are increasingly price-sensitive. Gamers are more likely to choose AMD if they see their existing hardware becoming more powerful without the need for a costly upgrade. As AMD continues to roll out these updates, it’s clear they’re not just playing catch-up; they’re redefining the game. For the tech-savvy investor, this could signal a shift in market dynamics as AMD positions itself as a formidable player in the gaming GPU space. For more on this game-changing driver, check out the full details <a href="https://wccftech.com/amd-fsr-4-enabled-in-fsr-3-1-titles-over-85-games-new-radeon-gpu-driver/" target="_blank" style="color: rgba(0, 0, 0, 0.87); text-decoration: underline;">here</a>.</p>
+    </div>
+    
+    
+    <!-- ICYMI Section -->
+    
+    <div class="section-container">
+        <h2 class="section-header">In Case You Missed It</h2>
+
+<p style="margin: 5px 0;">Have you heard...</p>
+
+<p style="margin: 5px 0;">Here's everything that didn't make it into this week's newsletters but we immediately sent to the group chat.</p>
+
+<ul style="margin: 5px 0; padding-left: 10px; list-style-type: disc;"><li><strong>TMZ</strong> reports that <em>Breaking Bad</em> star <strong>Raymond Cruz</strong> was arrested for allegedly spraying a neighbor with a hose. Guess he took "waterboarding" to a whole new level. </li>
+
+<p style="margin: 5px 0;"><li><strong>ScienceAlert</strong> warns that the deadly <em>kissing bug</em> disease is on the rise across the U.S. So, if you're planning a romantic evening, maybe skip the outdoor picnic and stick to Netflix. </li></p>
+
+<p style="margin: 5px 0;"><li><strong>Yahoo</strong> tells us that DWTS pro <strong>Jenna Johnson</strong> is feeling <em>anxious</em> to rehearse, but Corey Feldman hasn't shown up yet. Maybe he's too busy practicing his own moves... on the couch?</li></p>
+
+<p style="margin: 5px 0;"><li><strong>PBS</strong> shares that Speaker <strong>Johnson</strong> admits he misspoke about Trump being an FBI informant in the Epstein case. It's always a good day when politicians are just as confused as the rest of us.</li></p>
+
+<p style="margin: 5px 0;"><li><strong>Wccftech</strong> highlights that AMD’s new driver enables FSR 4 in FSR 3.1 "DX12" games, expanding the list to over 85 titles. That’s a lot of gaming options for those who need an excuse to avoid adulting!</li></ul></p>
+
+    </div>
+    
+    
+    <!-- Stat Section -->
+    
+    <div class="section-container">
+        <h2 class="section-header">STAT</h2>
+
+<div class="image-container"><img src="https://images.unsplash.com/photo-1593453917652-9bc01f9f9c2d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3ODE2MjR8MHwxfHNlYXJjaHw0fHxsb3R0ZXJ5JTIwdGlja2V0JTIwZXhjaXRlbWVudCUyMCUyMCUwQXN0b2NrJTIwbWFya2V0JTIwZGVjbGluZSUyMCUyMCUwQWVjb25vbWljJTIwdW5jZXJ0YWludHklMjAlMjAlMEFjb25zdW1lciUyMGNvbmZpZGVuY2UlMjAlMjAlMEFyb2xsZXJjb2FzdGVyJTIwZW1vdGlvbnN8ZW58MXwwfHx8MTc1NzQwNjQyMXww&ixlib=rb-4.1.0&q=80&w=1080" alt="white and red printer paper" class="section-image"/></div>
+    <em><a href="https://unsplash.com/photos/white-and-red-printer-paper-SHVbE5OxSvs" target="_blank" style="color: rgba(0, 0, 0, 0.87); text-decoration: underline;">Photo by Waldemar</a></em>
+
+<p style="margin: 5px 0;"><strong>Lottery Luck</strong>: A 100% chance of disappointment</p>
+
+<p style="margin: 5px 0;">In an unexpected twist of fate, the Missouri Lottery has revealed the location of the winning ticket, sending the state into a frenzy of excitement and speculation—if only for a brief moment. However, as the market faces a decline showing NaN%, the real jackpot seems to be a mirage for many. Who knew that purchasing a ticket could lead to such a rollercoaster of emotions, especially when the odds of winning are still stacked against you?</p>
+
+<ul style="margin: 5px 0; padding-left: 10px; list-style-type: disc;"><li>The winning ticket was purchased at a local convenience store, sparking a surge of hopeful visitors looking to cash in on the "luck."</li>
+<li>Meanwhile, the stock market's NaN% decline is leaving investors feeling like they've hit the losing end of the lottery. </li>
+<li>Analysts are scratching their heads, trying to make sense of the numbers, with many attributing the decline to ongoing economic uncertainties and a lack of consumer confidence.</li>
+
+<p style="margin: 5px 0;"></ul>So, while some are dreaming of riches, others are left to ponder the <em>real</em> lottery: navigating a market that seems to have lost its winning ticket.</p>
+    </div>
+    
+    
+    <!-- News Section -->
+    
+    <div class="section-container">
+      <h2 class="section-header">News</h2>
+  
+  What else is brewing
+
+<ul style="margin: 5px 0; padding-left: 10px; list-style-type: disc;"><li>A new <strong>Banksy mural</strong> depicting a judge beating a protester at the Royal Courts of Justice in London is set to be removed, sparking debates about art, protest, and public space. </li>
+<li>The <strong>U.S. economy</strong> added 336,000 jobs in September, significantly exceeding expectations and pushing the unemployment rate down to 3.8%, indicating a robust labor market despite concerns about inflation.</li>
+<li>In a surprising twist, <strong>Netflix</strong> has announced plans to introduce an ad-supported subscription tier, aiming to attract new viewers while increasing revenue streams in a competitive streaming landscape.</li>
+<li>The <strong>European Union</strong> has proposed new regulations aimed at curbing the influence of major tech companies, which could lead to significant changes in how platforms like Google and Facebook operate within member states.</li>
+<li>Following a recent <strong>court ruling</strong>, nearly 8 million student loan borrowers will see their payments resume, as interest on their loans begins to accrue again, raising concerns about financial strain for many Americans. </li>
+<li>In the world of sports, the <strong>NBA</strong> has unveiled new rules aimed at reducing flopping, with fines for players who are caught exaggerating contact during games, which could change the dynamics of play this season.</li>
+<li>A recent study reveals that <strong>remote work</strong> has led to a 15% increase in productivity among employees, prompting companies to rethink their office space needs and work-from-home policies.</li>
+  </ul>
+    </div>
+    
+    
+    <!-- Recommendations Section -->
+    
+    <div class="section-container">
+        <h2 class="section-header">RECS</h2>
+
+<p style="margin: 5px 0;">Today's to-do list:</p>
+
+<p style="margin: 5px 0;"><strong>Treat</strong>: Discover how to streamline your home office setup without sacrificing style. Because who says productivity can't look good?</p>
+
+<p style="margin: 5px 0;"><strong>Spot the fakes</strong>: Challenge your perception skills with this engaging quiz on identifying misleading marketing tactics. Spoiler: it's harder than you think!</p>
+
+<p style="margin: 5px 0;"><strong>Read, then conquer</strong>: Dive into <em>Atomic Habits</em> by James Clear for a solid blueprint on building effective habits that actually stick.</p>
+
+<p style="margin: 5px 0;"><strong>Watch</strong>: Check out the latest documentary on the rise of remote work. It’s a wild ride through the evolution of office culture—no pants required!</p>
+
+<p style="margin: 5px 0;"><strong>Listen</strong>: Tune into a podcast episode dissecting the psychology behind consumer behavior. You might just learn why you bought that avocado toast yesterday.</p>
+
+<p style="margin: 5px 0;"><strong>Create</strong>: Try your hand at crafting a vision board for your career goals. It’s like Pinterest, but with a purpose—who knew dreaming could be so productive?</p>
+    </div>
+    
+    
+    <!-- Games Section -->
+    
+    <div class="section-container">
+      <h2 class="section-header">PLAY</h2>
+
+<p style="margin: 5px 0;"><strong>Games available from Morning Brew</strong></p>
+
+<p style="margin: 5px 0;"><strong>Brew Crossword</strong>: Jack has dreamed up an extra fun puzzle for you and your co-players. Check it out here.</p>
+
+<p style="margin: 5px 0;"><strong>Open House</strong>  
+Welcome to Open House, the only newsletter section that is anticipating a hot new bombshell entering the villa at any moment. We'll give you a few facts about a listing and you try to guess the price.</p>
+
+<p style="margin: 5px 0;">Today's home might be in Seattle, WA, but it gives off a <em>real estate</em> vibe that screams, "I have a yacht parked somewhere." This listing is not just a house; it's an experience. With a price tag that could make your wallet cry, let's see what you get for your money:</p>
+
+<ul style="margin: 5px 0; padding-left: 10px; list-style-type: disc;"><li><strong>5 spacious bedrooms</strong> (perfect for all your imaginary friends)</li>
+<li><strong>7 luxurious bathrooms</strong> (because who doesn’t want options?)</li>
+<li>A kitchen that could make Gordon Ramsay weep with joy, featuring a <strong>double oven</strong> and a <strong>marble island</strong> that’s begging for Instagram selfies</li>
+<li>A <strong>home theater</strong> that’s more comfortable than your couch, complete with reclining seats and a popcorn machine (because <em>who</em> wants to go to the movies?)</li>
+<li>A <strong>rooftop deck</strong> with 360-degree views of the Seattle skyline, where you can contemplate life choices while sipping overpriced coffee</li>
+<li>And let’s not forget the <strong>indoor sauna</strong>—because sometimes you just need to sweat out the stress of <em>adulting</em>.</li>
+
+<p style="margin: 5px 0;"></ul>How much for your own little slice of paradise?</p>
+
+<p style="margin: 5px 0;"><strong>Answer</strong>: $5,000,000</p>
+    </div>
+    
+    
+    <!-- Share Section -->
+    
+    <div class="section-container">
+      <div class="referral-cta">
+        <h2 class="section-header">SHARE THE BREW</h2>
+
+<p style="margin: 5px 0;">Share Morning Brief with your friends, acquire free Brew swag, and then acquire more friends as a result of your fresh Brew swag.</p>
+
+<p style="margin: 5px 0;">We're saying we'll give you free stuff and more friends if you share a link. One link.</p>
+
+<p style="margin: 5px 0;">Your referral count: 0</p>
+
+<p style="margin: 5px 0;"><a href="#" target="_blank" style="color: rgba(0, 0, 0, 0.87); text-decoration: underline;">Click to Share</a></p>
+
+<p style="margin: 5px 0;">Or copy & paste your referral link to others:
+          morningbrief.com/daily/r/?kid=abc123</p>
+      </div>
+    </div>
+    
+    
+    <!-- Word of the Day Section -->
+    
+    <div class="section-container">
+      <h2 class="section-header">📚 WORD OF THE DAY</h2>
+
+<p style="margin: 5px 0;"><strong>Disruption</strong> <em>(noun)</em></p>
+
+<p style="margin: 5px 0;">A significant change that shakes up the usual way of doing things, often thanks to new technology or ideas.</p>
+
+<p style="margin: 5px 0;"><em>Example</em>: "When smartphones hit the market, they caused major disruption in the way we communicate, making flip phones look like ancient relics."</p>
+    </div>
+    
+    
+    <!-- Footer -->
+    <div class="newsletter-footer">
+      <p style="margin: 5px 0;">Written by the Morning Brief team</p>
+
+<p style="margin: 5px 0;">Until next time, keep your coffee strong and your ambitions stronger!</p>
+      <div style="margin: 20px 0; text-align: center;">
+        <a href="#" target="_blank" style="color: rgba(0, 0, 0, 0.38); text-decoration: underline; margin: 0 10px; font-size: 12px;">Advertise with us</a>
+        <a href="#" target="_blank" style="color: rgba(0, 0, 0, 0.38); text-decoration: underline; margin: 0 10px; font-size: 12px;">Unsubscribe</a>
+        <p class="footer-text" style="margin-top: 10px; font-size: 12px; line-height: 1.4;">
+          © 2025 Morning Brief. All rights reserved.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>
