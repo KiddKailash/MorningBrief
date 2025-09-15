@@ -97,12 +97,15 @@ export class UnsplashService {
           // Trigger a download ping (Unsplash requirement for free tier)
           this.triggerDownload(photo.id);
 
-          return {
+          const imageData = {
             url: photo.urls.regular,
             alt: photo.alt_description || photo.description || `${sectionName} related image`,
             credit: `Photo by ${photo.user.name}`,
             link: photo.links.html
           };
+          
+          console.log(`✅ Image found for "${sectionName}": ${imageData.url}`);
+          return imageData;
         }
       } else {
         console.log(`⚠️ No images found for "${sectionName}" with query "${query}"`);
