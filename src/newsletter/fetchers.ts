@@ -5,13 +5,13 @@
  * Handles articles, market data, and any other external data
  */
 
-import { Article, MarketIndicator } from "../types";
+import { Article, MarketIndicator, CategorizedArticles } from "../types";
 import { gnews } from "../integrations/gnews";
 import { scraper } from "../integrations/scraper";
 import { aggregateAllMarketData } from '../integrations/marketData';
 
 /**
- * Fetch and enrich news articles
+ * Fetch and enrich news articles (legacy method for backwards compatibility)
  */
 export async function fetchArticles(): Promise<Article[]> {
   console.log("📰 Fetching articles...");
@@ -32,10 +32,16 @@ export async function fetchArticles(): Promise<Article[]> {
       articles.map(async (article) => {
         try {
           const content = await scraper.scrapeArticleContent(article.url);
-          return { ...article, content };
+          if (content && content.length > 50) {
+            return { ...article, content };
+          } else {
+            console.warn(`Insufficient content scraped from ${article.url}, using description as fallback`);
+            return { ...article, content: article.description || "" };
+          }
         } catch (error) {
           console.warn(`Failed to scrape ${article.url}:`, error);
-          return article; // Return without content if scraping fails
+          // Use description as fallback content
+          return { ...article, content: article.description || "" };
         }
       })
     );
@@ -57,6 +63,81 @@ export async function fetchArticles(): Promise<Article[]> {
 }
 
 /**
+ * Fetch categorized articles for themed newsletter sections
+ */
+export async function fetchCategorizedArticles(): Promise<CategorizedArticles> {
+  console.log("📰 Fetching categorized articles...");
+
+  try {
+    // Get categorized articles from GNews
+    const categorizedArticles = await gnews.fetchCategorizedArticles();
+
+    // Enrich articles with scraped content for each category
+    const enrichedCategorizedArticles: CategorizedArticles = {
+      general: [],
+      business: [],
+      world: [],
+      technology: [],
+      entertainment: [],
+      science: [],
+      health: []
+    };
+
+    // Process each category
+    for (const [category, articles] of Object.entries(categorizedArticles)) {
+      if (articles.length === 0) {
+        console.warn(`No articles found for category: ${category}`);
+        continue;
+      }
+
+      console.log(`Enriching ${articles.length} ${category} articles with content...`);
+
+      // Enrich articles in this category with scraped content
+      const enrichedArticles = await Promise.all(
+        articles.map(async (article: any) => {
+          try {
+            const content = await scraper.scrapeArticleContent(article.url);
+            if (content && content.length > 50) {
+              return { ...article, content };
+            } else {
+              console.warn(`Insufficient content scraped from ${article.url}, using description as fallback`);
+              return { ...article, content: article.description || "" };
+            }
+          } catch (error) {
+            console.warn(`Failed to scrape ${article.url}:`, error);
+            // Use description as fallback content
+            return { ...article, content: article.description || "" };
+          }
+        })
+      );
+
+      // Filter out articles without sufficient content
+      enrichedCategorizedArticles[category as keyof CategorizedArticles] = enrichedArticles.filter(
+        (article) => article.content && article.content.length > 100
+      );
+    }
+
+    console.log("Categorized articles enriched:", Object.keys(enrichedCategorizedArticles).map(cat => 
+      `${cat}: ${enrichedCategorizedArticles[cat as keyof CategorizedArticles].length} articles`
+    ).join(', '));
+
+    return enrichedCategorizedArticles;
+  } catch (error) {
+    console.error("Error fetching categorized articles:", error);
+    // Return empty structure on error
+    return {
+      general: [],
+      business: [],
+      world: [],
+      technology: [],
+      entertainment: [],
+      science: [],
+      health: []
+    };
+  }
+}
+
+/**
  * Fetch market data from various sources
  */
 export async function fetchMarketData(): Promise<{
@@ -66,7 +147,7 @@ export async function fetchMarketData(): Promise<{
   console.log("📊 Fetching market data...");
 
   try {
-    // Use the real market data service
+    // Use the market data service
     const marketData = await aggregateAllMarketData();
 
     // Transform major indicators to our format
@@ -75,20 +156,9 @@ export async function fetchMarketData(): Promise<{
         name: indicator.name,
         symbol: indicator.name,
         value: indicator.price,
-        changePercent: indicator.changePercent,
+        changePercent: indicator.changePercent.toFixed(2), // Go to 2 decimal places
       })
     );
-
-    // Add the spotlight stock to the indicators list
-    if (marketData.spotlightStock?.spotlightStock) {
-      const spotlight = marketData.spotlightStock.spotlightStock;
-      indicators.push({
-        name: `${spotlight.name} (Spotlight)`,
-        symbol: spotlight.name,
-        value: spotlight.price,
-        changePercent: spotlight.changesPercentage,
-      });
-    }
 
     return {
       indicators,
@@ -107,7 +177,7 @@ export async function fetchMarketData(): Promise<{
 }
 
 /**
- * Fetch all data needed for newsletter
+ * Fetch all data needed for newsletter (legacy - uses single category)
  */
 export async function fetchAllNewsletterData() {
   console.log("🚀 Fetching all newsletter data...");
@@ -119,6 +189,25 @@ export async function fetchAllNewsletterData() {
 
   return {
     articles,
+    marketData: marketDataResult.indicators,
+    spotlightStock: marketDataResult.spotlightStock,
+    fetchedAt: new Date(),
+  };
+}
+
+/**
+ * Fetch all categorized data needed for the new newsletter structure
+ */
+export async function fetchAllCategorizedNewsletterData() {
+  console.log("🚀 Fetching all categorized newsletter data...");
+
+  const [categorizedArticles, marketDataResult] = await Promise.all([
+    fetchCategorizedArticles(),
+    fetchMarketData(),
+  ]);
+
+  return {
+    articles: categorizedArticles,
     marketData: marketDataResult.indicators,
     spotlightStock: marketDataResult.spotlightStock,
     fetchedAt: new Date(),
