@@ -1,11 +1,4 @@
 {
-  "functions": {
-    "public/**": {
-      "headers": {
-        "cache-control": "s-maxage=86400"
-      }
-    }
-  },
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
