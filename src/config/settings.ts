@@ -14,7 +14,13 @@ export const settings = {
   apis: {
     gnews: process.env['GNEWS_API_KEY'] || '',
     openai: process.env['OPENAI_API_KEY'] || '',
+    anthropic: process.env['ANTHROPIC_API_KEY'] || '',
     unsplash: process.env['UNSPLASH_API_KEY'] || ''
+  },
+  
+  // AI Provider Configuration
+  ai: {
+    provider: (process.env['AI_PROVIDER'] || 'openai').toLowerCase() as 'openai' | 'anthropic'
   },
   
   // Email Configuration
@@ -42,9 +48,13 @@ export const settings = {
 
 // Validate required settings
 export function validateSettings() {
+  // Determine which AI provider API key is required
+  const aiProviderKey = settings.ai.provider === 'anthropic' ? 'ANTHROPIC_API_KEY' : 'OPENAI_API_KEY';
+  const aiProviderPath = settings.ai.provider === 'anthropic' ? 'apis.anthropic' : 'apis.openai';
+  
   const required = [
     { key: 'apis.gnews', name: 'GNEWS_API_KEY' },
-    { key: 'apis.openai', name: 'OPENAI_API_KEY' },
+    { key: aiProviderPath, name: aiProviderKey },
     { key: 'email.address', name: 'GMAIL_ADDRESS' },
     { key: 'email.password', name: 'GMAIL_APP_PASS' }
   ];
