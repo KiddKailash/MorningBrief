@@ -1,6 +1,6 @@
 # Morning Brief Newsletter System
 
-An automated morning newsletter service that gathers news from multiple sources, generates articles with AI, adds market data and images, and delivers polished newsletters to subscribers—all in 1–2 minutes.
+An automated morning newsletter service that gathers news from multiple sources, generates articles with AI, adds market data and images, and delivers polished newsletters to subscribers—all in 1–2 minutes. Preview a system-generated [newsletter](https://morning-brief-66541p5d1-kailashs-projects-1ccb175a.vercel.app/example/newsletter-categorized-preview-2025-09-09T08-27-08).
 
 ## How It Works
 
@@ -34,9 +34,9 @@ An automated morning newsletter service that gathers news from multiple sources,
    ```env
    # Core APIs (Required)
    GNEWS_API_KEY=your_gnews_api_key
-   AI_PROVIDER=openai                    # or 'anthropic'
-   OPENAI_API_KEY=your_openai_key       # if using OpenAI
-   ANTHROPIC_API_KEY=your_anthropic_key # if using Anthropic
+   AI_PROVIDER=openai                     # 'openai' | 'anthropic'
+   OPENAI_API_KEY=your_openai_key         # if using OpenAI
+   ANTHROPIC_API_KEY=your_anthropic_key   # if using Anthropic
 
    # Email Configuration (Required)
    GMAIL_ADDRESS=your_email@gmail.com
